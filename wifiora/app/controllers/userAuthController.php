@@ -29,14 +29,14 @@ class UserAuthController {
                 $_SESSION['user_name'] = $found['name'];
                 $_SESSION['user_email'] = $found['email'];
                 $_SESSION['user_logged_in'] = true;
-                header("Location: /user_dashboard.php");
+                header("Location: /success.php");
                 exit();
             } else {
                 $error = "E-mail ou senha incorretos!";
-                require __DIR__ . '/../Views/user/login.php';
+                require __DIR__ . '/../Views/auth/user/login_user.php';
             }
         } else {
-            require __DIR__ . '/../Views/user/login.php';
+            require __DIR__ . '/../Views/auth/user/login_user.php';
         }
     }
 
@@ -52,10 +52,10 @@ class UserAuthController {
                 exit();
             } else {
                 $error = "Erro ao registrar usuário!";
-                require __DIR__ . '/../Views/user/register.php';
+                require __DIR__ . '/../Views/auth/user/register.php';
             }
         } else {
-            require __DIR__ . '/../Views/user/register.php';
+            require __DIR__ . '/../Views/auth/user/register.php';
         }
     }
 
