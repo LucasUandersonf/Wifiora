@@ -15,15 +15,16 @@ class Visitor
         return $this->conn;
     }
 
-    public function create($name, $cpf, $email, $password)
+    public function create($name, $cpf, $email, $password, $user_type, $birth_date)
     {
         $hashed = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $this->conn->prepare("INSERT INTO usuarios (name, cpf, email, password) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $name, $cpf, $email, $hashed);
+        $stmt = $this->conn->prepare("INSERT INTO usuarios (name, cpf, email, password, user_type, birth_date) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $name, $cpf, $email, $hashed, $user_type, $birth_date);
         $result = $stmt->execute();
         $stmt->close();
         return $result;
     }
+
 
     public function getAll($search = null)
     {

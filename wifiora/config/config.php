@@ -1,4 +1,5 @@
 <?php
+//preciso adicionar no .env
 class Database {
     private $host = "localhost";
     private $user = "root";

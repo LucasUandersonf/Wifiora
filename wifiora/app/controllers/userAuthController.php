@@ -1,15 +1,20 @@
 <?php
 require_once __DIR__ . '/../Models/Visitor.php';
+require_once __DIR__ . '/../Services/UnifiService.php';
 
-class UserAuthController {
+
+class UserAuthController
+{
     private $visitor;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->visitor = new Visitor();
         session_start();
     }
 
-    public function login_user($data = []) {
+    public function login_user($data = [])
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = trim($data['email']);
             $password = $data['password'];
@@ -29,6 +34,20 @@ class UserAuthController {
                 $_SESSION['user_name'] = $found['name'];
                 $_SESSION['user_email'] = $found['email'];
                 $_SESSION['user_logged_in'] = true;
+
+                // Captura o MAC address do hotspot
+                $mac = isset($_GET['id']) ? $_GET['id'] : null;
+
+                if ($mac) {
+                    try {
+                        $unifi = new UnifiService();
+                        $unifi->login();
+                        $unifi->authorize($mac); // autoriza por 60 minutos
+                    } catch (Exception $e) {
+                        error_log("Erro ao liberar no Unifi: " . $e->getMessage());
+                    }
+                }
+
                 header("Location: /success.php");
                 exit();
             } else {
@@ -40,14 +59,17 @@ class UserAuthController {
         }
     }
 
-    public function register($data = []) {
+    public function register($data = [])
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name = trim($data['name']);
             $cpf = trim($data['cpf']);
             $email = trim($data['email']);
             $password = $data['password'];
+            $user_type = trim($data['user_type']);
+            $birth_date = $data['birth_date'];
 
-            if ($this->visitor->create($name, $cpf, $email, $password)) {
+            if ($this->visitor->create($name, $cpf, $email, $password, $user_type, $birth_date)) {
                 header("Location: /login_user.php?success=1");
                 exit();
             } else {
@@ -57,11 +79,5 @@ class UserAuthController {
         } else {
             require __DIR__ . '/../Views/auth/user/register.php';
         }
-    }
-
-    public function logout() {
-        session_destroy();
-        header("Location: /login_user.php");
-        exit();
     }
 }
