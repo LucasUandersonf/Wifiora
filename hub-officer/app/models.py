@@ -701,3 +701,46 @@ class ContentPiece(Base):
     priority: Mapped[int] = mapped_column(Integer, default=50)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class Subscriber(Base):
+    """Assinante do boletim — só entra com consentimento (formulário + confirmação por e-mail). Nunca base comprada/extraída."""
+
+    __tablename__ = "newsletter_subscribers"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    email: Mapped[str] = mapped_column(String(200), unique=True, index=True)
+    token: Mapped[str] = mapped_column(String(64), unique=True, index=True)  # confirmar / descadastrar
+    name: Mapped[str] = mapped_column(String(160), default="")
+    role: Mapped[str] = mapped_column(String(120), default="")  # cargo: gestor, faturista, auditor, consultor…
+    organization: Mapped[str] = mapped_column(String(200), default="")
+    status: Mapped[str] = mapped_column(String(16), default="pendente", index=True)  # pendente | ativo | descadastrado | bounce | reclamacao
+    source: Mapped[str] = mapped_column(String(24), default="site")  # site | prospeccao | evento | manual
+    consent_text: Mapped[str] = mapped_column(Text, default="")  # texto exato aceito (prova de consentimento)
+    consent_ip: Mapped[str] = mapped_column(String(64), default="")
+    soft_bounces: Mapped[int] = mapped_column(Integer, default=0)
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class Edition(Base):
+    """Edição do boletim: curadoria → redação → diagramação → aprovação do fundador → envio."""
+
+    __tablename__ = "newsletter_editions"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    number: Mapped[int] = mapped_column(Integer, index=True)
+    slug: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    week: Mapped[str] = mapped_column(String(10), index=True)  # 2026-W44
+    status: Mapped[str] = mapped_column(String(16), default="rascunho", index=True)  # rascunho | aprovado | enviando | enviado | rejeitado
+    subject: Mapped[str] = mapped_column(String(200), default="")
+    preheader: Mapped[str] = mapped_column(String(200), default="")
+    items: Mapped[list] = mapped_column(JSON, default=list)  # curadoria (título, link, fonte, data)
+    content: Mapped[dict] = mapped_column(JSON, default=dict)  # manchete, gráfico, notas
+    review_notes: Mapped[str] = mapped_column(Text, default="")
+    sent_count: Mapped[int] = mapped_column(Integer, default=0)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

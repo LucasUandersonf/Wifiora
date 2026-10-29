@@ -70,7 +70,8 @@ def _send_sync(st: Settings, msg: EmailMessage) -> None:
 
 async def send(
     st: Settings, *, to: str, subject: str, body: str, kind: str, prospect_id: str | None = None,
-    unsubscribe_url: str | None = None, transactional: bool = False,
+    unsubscribe_url: str | None = None, transactional: bool = False, html: str | None = None, from_addr: str | None = None,
+    log_body: str | None = None,
 ) -> EmailLog:
     """Envia (ou simula) e registra. Comercial (não transacional) respeita a supressão."""
     status, error = "sent", None
@@ -80,19 +81,23 @@ async def send(
         status = "simulated"
     else:
         msg = EmailMessage()
-        msg["From"], msg["To"], msg["Subject"] = st.smtp_from, to, subject
-        msg["Message-ID"] = make_msgid(domain=domain_of(parseaddr(st.smtp_from or "")[1]) or None)
+        sender = from_addr or st.smtp_from
+        msg["From"], msg["To"], msg["Subject"] = sender, to, subject
+        msg["Message-ID"] = make_msgid(domain=domain_of(parseaddr(sender or "")[1]) or None)
         if unsubscribe_url:
             msg["List-Unsubscribe"] = f"<{unsubscribe_url}>"
             msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
         msg.set_content(body)
+        if html:
+            msg.add_alternative(html, subtype="html")  # texto puro continua como alternativa (entregabilidade)
         try:
             await asyncio.to_thread(_send_sync, st, msg)
         except Exception as e:  # noqa: BLE001
             status, error = "failed", str(e)[:500]
             log.warning("falha ao enviar e-mail para %s: %s", to, e)
     async with session_scope() as s:
-        row = EmailLog(prospect_id=prospect_id, direction="out", kind=kind, to_addr=to, from_addr=st.smtp_from or "", subject=subject[:300], body=body, status=status, error=error)
+        row = EmailLog(prospect_id=prospect_id, direction="out", kind=kind, to_addr=to, from_addr=from_addr or st.smtp_from or "", subject=subject[:300],
+                       body=body if log_body is None else log_body, status=status, error=error)
         s.add(row)
     return row
 

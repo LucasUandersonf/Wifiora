@@ -229,6 +229,48 @@ async def content_decide(piece_id: str, body: ContentDecision) -> dict[str, Any]
     return {"id": p.id, "status": p.status}
 
 
+@router.post("/newsletter/run")
+async def newsletter_run(office: Office = Depends(get_office)) -> dict[str, Any]:
+    """Monta agora a edição da semana (curadoria → redação → diagramação). Nada é enviado sem aprovação."""
+    from app.core import newsletter
+
+    e = await newsletter.build(office)
+    return {"edicao": e.number if e else None}
+
+
+@router.post("/newsletter/{edition_id}/decide")
+async def newsletter_decide(edition_id: str, body: ContentDecision) -> dict[str, Any]:
+    from app.core import newsletter
+
+    e = await newsletter.decide(edition_id, body.approve, body.note)
+    if e is None:
+        raise HTTPException(404, "edição não encontrada")
+    return {"id": e.id, "status": e.status}
+
+
+class TestSend(BaseModel):
+    to: str | None = Field(default=None, max_length=200)
+
+
+@router.post("/newsletter/{edition_id}/test")
+async def newsletter_test(edition_id: str, body: TestSend, office: Office = Depends(get_office)) -> dict[str, Any]:
+    """Envia a edição só para você (NEWSLETTER_TEST_EMAIL ou o e-mail informado)."""
+    from app.core import newsletter
+
+    to = body.to or office.settings.newsletter_test_email
+    if not to:
+        raise HTTPException(422, "informe um e-mail ou configure NEWSLETTER_TEST_EMAIL")
+    return {"status": await newsletter.send_test(office, edition_id, to)}
+
+
+@router.post("/newsletter/send")
+async def newsletter_send(office: Office = Depends(get_office)) -> dict[str, Any]:
+    """Envia já a edição aprovada (fora da janela de terça), respeitando o limite diário."""
+    from app.core import newsletter
+
+    return await newsletter.send(office, force=True)
+
+
 @router.post("/sales/run")
 async def sales_run(office: Office = Depends(get_office)) -> dict[str, Any]:
     """Roda agora uma volta do funil comercial (mesmo com o comercial desligado, para testar)."""

@@ -182,6 +182,20 @@ Com `BUSINESS=insighta`, o comercial vende a Insighta (inteligência de dados pa
 - **Argos** (GEO técnico) audita a landing toda semana (indexação liberada, JSON-LD, sitemap, `llms.txt`).
 - As habilidades de vendas sênior (6 blocos) e o playbook de conteúdo ficam em `app/playbooks/` (em inglês, para os modelos).
 
+### Redação: o boletim executivo (`/boletim`)
+
+Newsletter editorial semanal (padrão: *Boletim RCM Brasil*), sem venda: autoridade de marca no estilo jornal.
+
+- **Clio** lê os feeds de `NEWSLETTER_SOURCES` (RSS/Atom de ANS, Imprensa Nacional, operadoras) e escolhe o que muda o caixa das clínicas.
+- **Calíope** escreve a manchete, o gráfico e as notas de bancada (playbook editorial em inglês). Tudo o que não tem link da curadoria é cortado, e o gráfico só entra com fonte. Números ganham alerta "conferir na fonte". Em semana sem notícia, a manchete vira o guia aprovado mais recente do blog.
+- **Dédalo** monta o HTML em tabelas (Outlook de desktop e celular), a versão em texto e a versão web pública e indexável (`/boletim/edicao-N`, com JSON-LD `NewsArticle`).
+- **Fundador:** prévia, teste para o próprio e-mail, aprovar ou rejeitar. Sem aprovação, nada sai.
+- **Envio:** terça 8h (São Paulo), em lotes com limite diário, só para assinantes **ativos**, sem repetir.
+- **Base:** formulário em `/boletim` com consentimento explícito e **confirmação por e-mail (opt-in duplo)**. Confirmar e sair usam POST, porque antivírus que abrem links sozinhos não podem inscrever ninguém; o descadastro de um clique do Gmail e do Outlook também funciona. O webhook `/webhooks/boletim?token=` retira bounces, reclamações de spam e descadastros.
+- O último e-mail da prospecção e o e-mail de desqualificação convidam a clínica a assinar o boletim.
+
+**Lista comprada ou extraída (ex.: e-mails do LinkedIn) é proibida:** viola os termos do LinkedIn e dos provedores de envio e não se sustenta na LGPD para marketing.
+
 Antes de ligar de verdade: veja `docs/insighta/PARA_VENDER_DE_VERDADE.md` (o que contratar e quanto custa) e `docs/insighta/AUDITORIA_GEO_LANDING.md`.
 
 ## Rastreador de IA (ChatGPT, Claude e Perplexity)

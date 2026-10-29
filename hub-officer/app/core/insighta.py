@@ -231,7 +231,15 @@ async def compose(office: Office, p: Prospect, touch: int) -> tuple[str, str]:
                 f"A calculadora abaixo estima o valor da sua clínica em 2 minutos, e dá para testar com os dados reais por {o['trial_days']} dias, sem cartão."
                 + (f"\n\nAinda restam {o['founders_remaining']} vagas do plano Founders (R$ {o['founders_brl']:.0f}/mês com preço travado)." if o["founders_remaining"] else "")
                 + "\n\nSe preferir conversar, é só responder este e-mail.")
-    return subject, f"{body}\n\nCalcule a perda da sua clínica: {calculator_link(office, p, touch)}{sales.footer(office, p)}"
+    ps = newsletter_invite(office) if touch >= sales.MAX_TOUCHES else ""  # último contato: deixa um canal útil aberto, sem insistir
+    return subject, f"{body}\n\nCalcule a perda da sua clínica: {calculator_link(office, p, touch)}{ps}{sales.footer(office, p)}"
+
+
+def newsletter_invite(office: Office) -> str:
+    """Convite ao boletim (opt-in): quem não quer comprar agora pode acompanhar o mercado — e a marca fica familiar."""
+    st = office.settings
+    return (f"\n\nP.S.: toda terça publicamos o {st.newsletter_name}, com mudanças da ANS, do padrão TISS e regras de operadoras, "
+            f"sem propaganda. Se fizer sentido, a inscrição é aqui: {sales.base_url(office)}/boletim")
 
 
 def two_options(o: dict[str, Any]) -> dict[str, dict[str, str]]:
@@ -292,7 +300,7 @@ async def answer(office: Office, p: Prospect, question: str) -> None:
         if not body or sales.BANNED.search(body):
             body = (f"Obrigado pela conversa! Pelo que você contou, não acho que a Insighta se pagaria para a {p.company} neste momento, "
                     "e prefiro não tomar o seu tempo. Se a situação mudar, é só responder este e-mail.")
-        await mailer.send(st, to=p.email, subject=f"Re: Insighta para a {p.company}", body=body + sales.footer(office, p), kind="resposta", prospect_id=p.id, transactional=True)
+        await mailer.send(st, to=p.email, subject=f"Re: Insighta para a {p.company}", body=body + newsletter_invite(office) + sales.footer(office, p), kind="resposta", prospect_id=p.id, transactional=True)
         await sales._set(p.id, status="desqualificado", last_contact_at=now, notes=(p.notes + f"\ndesqualificado: {reason or 'sem fit'}").strip())
         await sales._status(office, sales.CLOSER, "idle", f"{p.company} desqualificada: {reason or 'sem fit'}")
         await sales._say(office, sales.CLOSER, "founder", f"{p.company} desqualificada rápido ({reason or 'sem fit'})")

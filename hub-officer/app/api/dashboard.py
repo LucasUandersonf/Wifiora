@@ -290,6 +290,27 @@ async def content_markdown(piece_id: str, office: Office = Depends(get_office)) 
                     headers={"Content-Disposition": f'inline; filename="{p.slug}.md"'})
 
 
+@router.get("/newsletter")
+async def newsletter_panel(office: Office = Depends(get_office)) -> dict[str, Any]:
+    from app.core import newsletter
+
+    return await newsletter.summary(office)
+
+
+@router.get("/newsletter/{edition_id}.html")
+async def newsletter_preview(edition_id: str, office: Office = Depends(get_office)) -> Response:
+    """Prévia da edição como o assinante verá (antes de aprovar)."""
+    from app.core import newsletter
+    from app.db import session_scope
+    from app.models import Edition
+
+    async with session_scope() as s:
+        e = await s.get(Edition, edition_id)
+    if e is None:
+        raise HTTPException(404, "edição não encontrada")
+    return Response(newsletter.render_html(office, e), media_type="text/html; charset=utf-8", headers={"Cache-Control": "no-store"})
+
+
 @router.get("/sales")
 async def sales_panel(office: Office = Depends(get_office)) -> dict[str, Any]:
     from app.core import sales

@@ -139,6 +139,17 @@ class Settings(BaseSettings):
     insighta_trial_days: int = 14
     content_enabled: bool = False  # time de Conteúdo & GEO: 1 rascunho por semana para aprovação + auditoria da landing
     content_interval_hours: int = 168
+    # Boletim executivo (newsletter editorial) — só para assinantes que confirmaram (opt-in duplo)
+    newsletter_enabled: bool = False  # curadoria + redação semanal (envio sempre depende da aprovação do fundador)
+    newsletter_name: str = "Boletim RCM Brasil"
+    newsletter_tagline: str = "Inteligência semanal sobre faturamento, glosas e regras da saúde suplementar"
+    newsletter_sources: str = ""  # feeds RSS/Atom separados por "|" (ANS, Imprensa Nacional, operadoras…) — confira cada URL
+    newsletter_from: str | None = None  # remetente do boletim (ex.: "Boletim RCM Brasil <boletim@seudominio>"); sem ele usa SMTP_FROM
+    newsletter_send_weekday: int = 1  # 0=segunda … 1=terça
+    newsletter_send_hour: int = 8  # horário de São Paulo
+    newsletter_daily_send_cap: int = 250  # respeite o limite do seu provedor (Brevo, SES, SendGrid…)
+    newsletter_webhook_secret: str | None = None  # bounces/reclamações do provedor de envio
+    newsletter_test_email: str | None = None  # para "enviar teste para mim"
     google_maps_api_key: str | None = None  # Places API (New) — busca oficial no Google Maps, paga por chamada
     places_daily_call_cap: int = 10  # buscas no Google Maps por dia (cada uma traz até 20 clínicas)
     places_cost_per_call_usd: float = 0.035  # ESTIMATIVA para o livro-caixa — confira a tabela oficial do Google

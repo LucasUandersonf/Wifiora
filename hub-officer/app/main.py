@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api import agency, control, dashboard, datasets, portal_admin, public, radar, v1
+from app.api import agency, control, dashboard, datasets, newsletter, portal_admin, public, radar, v1
 from app.config import get_settings
 from app.core import bots
 from app.core.office import Office
@@ -48,6 +48,7 @@ app.include_router(radar.read)
 app.include_router(radar.write)
 app.include_router(v1.router)
 app.include_router(agency.router)
+app.include_router(newsletter.router)
 app.include_router(datasets.router)  # antes de public: /hub/{slug}/data.csv etc.
 app.include_router(public.router)
 

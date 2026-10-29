@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>{{ subject }}</title>
+<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
+<style>
+  body{margin:0;padding:0;background:#f3f1f7}
+  table{border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0}
+  a{color:#4b2bb8}
+  @media only screen and (max-width:620px){
+    .container{width:100%!important}
+    .px{padding-left:20px!important;padding-right:20px!important}
+    .h1{font-size:23px!important;line-height:29px!important}
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#f3f1f7;">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f3f1f7;">{{ preheader }}&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f1f7;">
+<tr><td align="center" style="padding:24px 8px;">
+  <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+  <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;">
+
+    {% if not web %}<tr><td class="px" align="right" style="padding:10px 32px 0 32px;font:12px/18px Arial,Helvetica,sans-serif;color:#6b6780;">
+      <a href="{{ web_url }}" style="color:#6b6780;">Ler no navegador</a></td></tr>{% endif %}
+
+    <!-- cabeçalho (masthead) -->
+    <tr><td class="px" style="padding:22px 32px 14px 32px;border-bottom:3px solid #140a33;">
+      <div style="font:bold 30px/34px Georgia,'Times New Roman',serif;color:#140a33;letter-spacing:-0.5px;">{{ name }}</div>
+      <div style="font:13px/19px Arial,Helvetica,sans-serif;color:#6b6780;padding-top:4px;">{{ tagline }}</div>
+    </td></tr>
+    <tr><td class="px" style="padding:8px 32px;border-bottom:1px solid #e4e1ec;font:bold 11px/16px Arial,Helvetica,sans-serif;color:#6b6780;letter-spacing:1px;text-transform:uppercase;">
+      Edição {{ number }} &nbsp;·&nbsp; {{ date.strftime('%d/%m/%Y') }}
+    </td></tr>
+
+    {% if head %}
+    <!-- manchete -->
+    <tr><td class="px" style="padding:26px 32px 6px 32px;">
+      <div style="font:bold 11px/16px Arial,Helvetica,sans-serif;color:#673de6;letter-spacing:1.2px;text-transform:uppercase;">{% if head.guide %}Guia da semana{% else %}Manchete{% endif %}</div>
+      <h1 class="h1" style="margin:8px 0 0 0;font:bold 27px/33px Georgia,'Times New Roman',serif;color:#140a33;">{{ head.title }}</h1>
+      {% if head.dek %}<p style="margin:10px 0 0 0;font:italic 17px/25px Georgia,'Times New Roman',serif;color:#4a465c;">{{ head.dek }}</p>{% endif %}
+    </td></tr>
+    <tr><td class="px" style="padding:8px 32px 6px 32px;">
+      {% for p in head_paragraphs %}<p style="margin:0 0 14px 0;font:16px/26px Arial,Helvetica,sans-serif;color:#24212e;">{{ p }}</p>{% endfor %}
+      {% if head.source_url %}<p style="margin:0;font:13px/20px Arial,Helvetica,sans-serif;color:#6b6780;">{% if head.guide %}<a href="{{ head.source_url }}" style="color:#4b2bb8;">Ler o guia completo →</a>{% else %}Fonte: <a href="{{ head.source_url }}" style="color:#4b2bb8;">{{ head.source_url.split('/')[2] }}</a>{% endif %}</p>{% endif %}
+    </td></tr>
+    {% endif %}
+
+    {% if chart %}
+    <!-- gráfico em tabela (abre igual no Outlook, Gmail e celular) -->
+    <tr><td class="px" style="padding:24px 32px 6px 32px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f6fc;border:1px solid #e4e1ec;">
+        <tr><td style="padding:16px 18px 6px 18px;font:bold 15px/21px Georgia,'Times New Roman',serif;color:#140a33;">{{ chart.title }}{% if chart.unit %} <span style="font:12px Arial,Helvetica,sans-serif;color:#6b6780;">({{ chart.unit }})</span>{% endif %}</td></tr>
+        {% for r in chart.rows %}
+        <tr><td style="padding:5px 18px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td width="38%" style="font:13px/18px Arial,Helvetica,sans-serif;color:#24212e;padding-right:8px;">{{ r.label }}</td>
+            <td width="50%"><table role="presentation" width="{{ r.pct }}%" cellpadding="0" cellspacing="0" border="0"><tr><td height="14" bgcolor="#673de6" style="background:#673de6;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>
+            <td width="12%" align="right" style="font:bold 13px/18px Arial,Helvetica,sans-serif;color:#140a33;">{{ r.value }}</td>
+          </tr></table>
+        </td></tr>
+        {% endfor %}
+        <tr><td style="padding:8px 18px 14px 18px;font:12px/17px Arial,Helvetica,sans-serif;color:#6b6780;">Fonte: <a href="{{ chart.source_url }}" style="color:#4b2bb8;">{{ chart.source or chart.source_url.split('/')[2] }}</a></td></tr>
+      </table>
+    </td></tr>
+    {% endif %}
+
+    {% if notes %}
+    <!-- notas de bancada -->
+    <tr><td class="px" style="padding:26px 32px 4px 32px;">
+      <div style="font:bold 11px/16px Arial,Helvetica,sans-serif;color:#673de6;letter-spacing:1.2px;text-transform:uppercase;border-top:1px solid #e4e1ec;padding-top:18px;">Notas de bancada</div>
+    </td></tr>
+    {% for n in notes %}
+    <tr><td class="px" style="padding:12px 32px 4px 32px;">
+      <div style="font:bold 17px/23px Georgia,'Times New Roman',serif;color:#140a33;">{{ n.title }}</div>
+      {% for p in n.paragraphs %}<p style="margin:6px 0 0 0;font:15px/24px Arial,Helvetica,sans-serif;color:#24212e;">{{ p }}</p>{% endfor %}
+      {% if n.source_url %}<p style="margin:4px 0 0 0;font:12px/18px Arial,Helvetica,sans-serif;color:#6b6780;">Fonte: <a href="{{ n.source_url }}" style="color:#4b2bb8;">{{ n.source_url.split('/')[2] }}</a></p>{% endif %}
+    </td></tr>
+    {% endfor %}
+    {% endif %}
+
+    <!-- rodapé institucional discreto -->
+    <tr><td class="px" style="padding:30px 32px 26px 32px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e4e1ec;"><tr><td style="padding-top:16px;font:12px/19px Arial,Helvetica,sans-serif;color:#6b6780;">
+        Produzido pela equipe de inteligência de dados da <a href="{{ site_url }}" style="color:#6b6780;">Insighta</a>{% if cnpj %} · CNPJ {{ cnpj }}{% endif %}.<br>
+        {% if web %}Receba toda semana por e-mail: <a href="{{ subscribe_url }}" style="color:#4b2bb8;">assinar o {{ name }}</a>.
+        {% else %}Você recebe este boletim porque se inscreveu em <a href="{{ subscribe_url }}" style="color:#6b6780;">{{ subscribe_url.split('//')[1] }}</a>{% if email %} com {{ email }}{% endif %}.
+        <a href="{{ unsubscribe_url }}" style="color:#6b6780;">Cancelar inscrição</a>.{% endif %}
+      </td></tr></table>
+    </td></tr>
+  </table>
+  <!--[if mso]></td></tr></table><![endif]-->
+</td></tr>
+</table>
+</body>
+</html>

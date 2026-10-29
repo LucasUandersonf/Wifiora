@@ -60,6 +60,9 @@ class Office:
             from app.core import insighta_content
 
             await insighta_content.register_personas()
+            from app.core import newsletter
+
+            await newsletter.register_personas()
         agents, self.scouts_by_sector = build_org(self)
         self.agents = {a.agent_id: a for a in agents}
         self.started_at = datetime.now(UTC)
@@ -74,6 +77,7 @@ class Office:
             self._tasks.append(asyncio.create_task(self._viability_scheduler(), name="viability-scheduler"))
             self._tasks.append(asyncio.create_task(self._sales_scheduler(), name="sales-scheduler"))
             self._tasks.append(asyncio.create_task(self._content_scheduler(), name="content-scheduler"))
+            self._tasks.append(asyncio.create_task(self._newsletter_scheduler(), name="newsletter-scheduler"))
         log.info("escritório online: %d agentes, LLM=%s, bus=%s", len(agents), self.llm.client.provider, self.bus.name)
 
     def spawn(self, coro: Any) -> asyncio.Task[Any]:
@@ -188,6 +192,19 @@ class Office:
             except Exception:  # noqa: BLE001
                 log.exception("erro no time de conteúdo")
             await asyncio.sleep(max(3600, self.settings.content_interval_hours * 3600))
+
+    async def _newsletter_scheduler(self) -> None:
+        """Boletim: monta a edição da semana (uma por semana) e envia a aprovada na janela, em lotes — confere a cada hora."""
+        from app.core import newsletter
+
+        await asyncio.sleep(150)
+        while True:
+            try:
+                if not await self.gov.get("paused") and not self.resting():
+                    await newsletter.tick(self)
+            except Exception:  # noqa: BLE001
+                log.exception("erro no boletim")
+            await asyncio.sleep(3600)
 
     async def trigger_cycle(self, by: str = "scheduler", niche: str | None = None) -> None:
         await self.dispatch(Envelope(type="cycle.start", sender=by, recipient="cvo", payload={"niche": niche} if niche else {}, summary="iniciar ciclo estratégico"))

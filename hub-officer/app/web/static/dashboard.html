@@ -69,6 +69,17 @@
     </div>
   </section>
 
+  <section id="newsletter">
+    <h2>Redação · boletim executivo <span class="muted small" id="nl-meta"></span></h2>
+    <p class="muted small">Clio lê as fontes oficiais → Calíope escreve manchete, gráfico (só com número de fonte) e notas de bancada → Dédalo monta o HTML → <strong>você aprova</strong> → sai na terça de manhã só para quem confirmou a inscrição. Bounces e reclamações saem da base sozinhos.</p>
+    <div class="row wrap">
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="nl-enabled"> Redação ligada</label>
+      <button id="nl-run" style="flex:none">Montar a edição da semana agora</button>
+    </div>
+    <div id="nl-info" class="small" style="margin:10px 0"></div>
+    <div class="card"><div class="scroll"><table class="tbl" id="tbl-editions"></table></div></div>
+  </section>
+
   <section id="content">
     <h2>Conteúdo &amp; GEO da Insighta <span class="muted small" id="content-meta"></span></h2>
     <p class="muted small">Calíope escreve 1 página por semana a partir da pauta (dúvidas reais de gestores de clínica) → você aprova ou rejeita → a página aprovada sai pronta (Markdown + JSON-LD) para publicar no site da Insighta. Argos audita a landing toda semana.</p>

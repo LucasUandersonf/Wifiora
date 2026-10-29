@@ -279,7 +279,7 @@ async function refreshAiData() {
       <td>${dateBR(b.last_at)}<div class="muted small">${esc(b.last_path)}</div></td></tr>`).join("") || '<tr><td colspan="6" class="muted">Nenhum robô de IA registrado ainda. Depois do deploy com domínio próprio, os acessos aparecem aqui.</td></tr>');
   } catch (e) { /* segue */ }
 }
-setInterval(() => { if (token && !$("#app").classList.contains("hidden")) { refreshAiData(); refreshViability(); refreshCouncil(); refreshNiches(); refreshDiagnoses(); refreshSales(); refreshContent(); } }, 60000);
+setInterval(() => { if (token && !$("#app").classList.contains("hidden")) { refreshAiData(); refreshViability(); refreshCouncil(); refreshNiches(); refreshDiagnoses(); refreshSales(); refreshContent(); refreshNewsletter(); } }, 60000);
 
 // ------------------------------------------------------------------ comercial automático
 const P_STATUS = { novo: "novo", sem_contato: "sem e-mail", diagnosticado: "diagnosticado", contatado: "contatado", respondeu: "respondeu", proposta: "proposta enviada", cliente: "cliente", perdido: "perdido", descadastrado: "descadastrado", desqualificado: "desqualificado (sem fit)" };
@@ -321,6 +321,44 @@ $("#sales-enabled").addEventListener("change", (ev) => saveSales({ sales_enabled
 $("#sales-auto").addEventListener("change", (ev) => saveSales({ sales_auto_send: ev.target.checked }));
 $("#sales-cap").addEventListener("change", (ev) => saveSales({ sales_daily_email_cap: Number(ev.target.value) }));
 $("#sales-run").addEventListener("click", async () => { toast("Rodando o funil… pode levar alguns minutos."); try { await post("/api/control/sales/run"); } catch (e) { toast(e.message); } refreshSales(); refreshDiagnoses(); });
+
+// ------------------------------------------------------------------ redação (boletim)
+const E_STATUS = { rascunho: "rascunho — aprovar?", aprovado: "aprovado (sai na janela)", enviando: "enviando em lotes", enviado: "enviado", rejeitado: "rejeitado" };
+const S_LABEL = { ativo: "ativos", pendente: "aguardando confirmação", descadastrado: "saíram", bounce: "e-mail inválido", reclamacao: "marcaram spam" };
+async function refreshNewsletter() {
+  if (document.activeElement?.closest("#newsletter .row")) return;
+  try {
+    const d = await api("/api/office/newsletter");
+    $("#nl-enabled").checked = d.enabled;
+    $("#nl-meta").textContent = `${d.name} · ${d.subscribers.ativo || 0} assinante(s) ativo(s)`;
+    $("#nl-info").innerHTML = `Assinantes: ${Object.entries(d.subscribers).map(([k, v]) => `${v} ${S_LABEL[k] || k}`).join(" · ") || "nenhum ainda"} · página de inscrição: <a href="${esc(d.signup_url)}" target="_blank" rel="noopener">${esc(d.signup_url)}</a>
+      <br>Envio: ${esc(d.window)} · até ${d.cap}/dia · ${d.sources ? `${d.sources} fonte(s) monitorada(s)` : '<span class="badge b-warning">nenhuma fonte configurada (NEWSLETTER_SOURCES)</span>'}
+      ${d.webhook ? "" : ' · <span class="badge b-warning">sem webhook de bounces (NEWSLETTER_WEBHOOK_SECRET)</span>'}`;
+    $("#tbl-editions").innerHTML = "<tr><th>Edição</th><th>Status</th><th class=num>Enviados</th><th></th></tr>" + (d.editions.map((e) => `<tr>
+      <td><strong>${e.number}. ${esc(e.subject)}</strong><div class="muted small">${e.items} notícia(s) da curadoria${e.flags.length ? ` · <span style="color:#b45309">${e.flags.length} ponto(s) para conferir: ${esc(e.flags.slice(0, 3).join("; "))}</span>` : ""}</div></td>
+      <td>${esc(E_STATUS[e.status] || e.status)}</td><td class=num>${e.sent}</td>
+      <td class="small" style="white-space:nowrap"><a href="#" data-prev="${e.id}">prévia</a>${["rascunho", "aprovado"].includes(e.status) ? ` · <a href="#" data-test="${e.id}">teste p/ mim</a>` : ""}
+        ${e.status === "rascunho" ? ` · <a href="#" data-ok="${e.id}">aprovar</a> · <a href="#" data-no="${e.id}">rejeitar</a>` : ""}${["enviado", "enviando"].includes(e.status) ? ` · <a href="${esc(e.web)}" target="_blank" rel="noopener">web</a>` : ""}</td></tr>`).join("") || '<tr><td colspan="4" class="muted">Nenhuma edição ainda.</td></tr>');
+  } catch (e) { /* segue */ }
+}
+$("#tbl-editions").addEventListener("click", async (ev) => {
+  const el = ev.target.closest("a[data-prev],a[data-test],a[data-ok],a[data-no]"); if (!el) return; ev.preventDefault();
+  try {
+    if (el.dataset.prev) {
+      const res = await fetch(`/api/office/newsletter/${el.dataset.prev}.html`, { headers: { "X-Founder-Token": token } });
+      window.open(URL.createObjectURL(new Blob([await res.text()], { type: "text/html;charset=utf-8" })), "_blank");
+    } else if (el.dataset.test) {
+      const to = prompt("Enviar a prévia para qual e-mail? (vazio = NEWSLETTER_TEST_EMAIL)") ?? null; if (to === null) return;
+      const r = await post(`/api/control/newsletter/${el.dataset.test}/test`, to ? { to } : {}); toast(`Teste: ${r.status}`);
+    } else {
+      const approve = !!el.dataset.ok, note = approve ? "" : (prompt("Motivo (ajuda a redação):") || "");
+      await post(`/api/control/newsletter/${el.dataset.ok || el.dataset.no}/decide`, { approve, note }); toast(approve ? "Aprovada: sai na próxima janela de envio." : "Rejeitada.");
+    }
+  } catch (e) { toast(e.message); }
+  refreshNewsletter();
+});
+$("#nl-enabled").addEventListener("change", async (ev) => { try { await api("/api/control/settings", { method: "PATCH", body: JSON.stringify({ newsletter_enabled: ev.target.checked }) }); toast("Redação atualizada."); document.activeElement.blur(); } catch (e) { toast(e.message); } refreshNewsletter(); });
+$("#nl-run").addEventListener("click", async () => { toast("Montando a edição…"); try { const r = await post("/api/control/newsletter/run"); toast(r.edicao ? `Edição ${r.edicao} pronta para aprovar.` : "Nada novo: já existe edição nesta semana ou não há notícia com fonte nem guia aprovado."); } catch (e) { toast(e.message); } refreshNewsletter(); });
 
 // ------------------------------------------------------------------ conteúdo & GEO (Insighta)
 const C_STATUS = { pauta: "na pauta", rascunho: "rascunho — aprovar?", aprovado: "aprovado", rejeitado: "rejeitado", publicado: "publicado" };
@@ -546,7 +584,7 @@ $("#login-form").addEventListener("submit", async (ev) => {
 async function start() {
   if (!token) return showLogin();
   await refresh();
-  if (!$("#app").classList.contains("hidden")) { await loadLog().catch(() => {}); connectStream(); refreshPortal(); refreshAiData(); refreshViability(); refreshCouncil(); refreshNiches(); refreshDiagnoses(); refreshSales(); refreshContent(); }
+  if (!$("#app").classList.contains("hidden")) { await loadLog().catch(() => {}); connectStream(); refreshPortal(); refreshAiData(); refreshViability(); refreshCouncil(); refreshNiches(); refreshDiagnoses(); refreshSales(); refreshContent(); refreshNewsletter(); }
 }
 setInterval(() => { if (token && !$("#app").classList.contains("hidden")) refresh(); }, 5000);
 start();

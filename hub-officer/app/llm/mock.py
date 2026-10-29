@@ -400,5 +400,22 @@ class MockLLM(LLMClient):
                 "body_markdown": f"(Demonstração) Resposta direta sobre {req.context.get('keyword', '')}.\n\n## Por que isso importa\n\nTexto de exemplo.\n\n## Passo a passo\n\n1. Primeiro passo.\n2. Segundo passo.",
                 "faq": [{"q": f"{t}?", "a": "(Demonstração) Resposta curta."}], "sources": ["ANS — padrão TISS"]}
 
+    def _newsletter_curate(self, req: LLMRequest) -> dict:
+        return {"picked": [{"i": it["i"], "why": "(Demonstração) impacto no faturamento"} for it in req.context.get("items", [])[:6]]}
+
+    def _newsletter_write(self, req: LLMRequest) -> dict:
+        items = req.context.get("items") or []
+        if not items:
+            return {"subject": "", "preheader": "", "headline": None, "chart": None, "notes": []}
+        first = items[0]
+        return {
+            "subject": f"(Demonstração) {first['title']}"[:60], "preheader": "O que muda para o faturamento e o que fazer nesta semana",
+            "headline": {"title": first["title"], "dek": "O que muda para clínicas e hospitais.", "source_url": first["link"],
+                         "body": "(Demonstração) Resumo do que foi publicado.\n\nQuem é afetado e o que fazer nesta semana."},
+            "chart": {"title": "(Demonstração) Indicador da semana", "unit": "índice", "source": first["source"], "source_url": first["link"],
+                      "rows": [{"label": "Operadora A", "value": 3.2}, {"label": "Operadora B", "value": 1.8}, {"label": "Operadora C", "value": 0.9}]},
+            "notes": [{"title": i["title"][:80], "body": "(Demonstração) Dica prática para a bancada de faturamento.", "source_url": i["link"]} for i in items[1:4]],
+        }
+
     def _generic(self, req: LLMRequest) -> dict:
         return {"result": "ok", "kind": req.kind}
