@@ -13,6 +13,7 @@ do WhatsApp exige consentimento. O canal é e-mail B2B com descadastro (e ligaç
 from __future__ import annotations
 
 import json
+import re
 import logging
 import random
 import secrets
@@ -24,7 +25,7 @@ import httpx
 from sqlalchemy import func, select
 
 from app.core import mailer
-from app.core import sales
+from app.core import sales, sales_skills
 from app.db import session_scope
 from app.models import CostEntry, Prospect
 
@@ -45,6 +46,7 @@ PAINS = {
     "psicologia": "faltas e cancelamentos em cima da hora",
 }
 DEFAULT_PAIN = "glosas de convênio, faltas na agenda e dinheiro que fatura mas não chega ao caixa"
+PRICE_Q = re.compile(r"pre[cç]o|valor|caro|desconto|quanto custa|or[cç]amento|plano", re.I)
 _offer_cache: tuple[float, dict[str, Any]] = (0.0, {})
 
 
@@ -211,7 +213,7 @@ async def compose(office: Office, p: Prospect, touch: int) -> tuple[str, str]:
     }
     out = await office.llm.complete_json(
         kind="insighta.email",
-        system="Você é Mercúrio, do comercial da Insighta (inteligência de dados para clínicas). Escreve e-mails B2B curtos, humanos e honestos em português do Brasil.",
+        system=sales_skills.system("Você é Mercúrio, do comercial da Insighta (inteligência de dados para clínicas). Escreve e-mails B2B curtos, humanos e honestos em português do Brasil.", "first_touch" if touch == 1 else "followup"),
         prompt=(
             f"FATOS (use só estes): {json.dumps(facts, ensure_ascii=False)}\n"
             f"Escreva o e-mail {'de primeiro contato' if touch == 1 else f'de acompanhamento nº {touch - 1} (curto, sem insistir)'} para o gestor da clínica. "
@@ -243,7 +245,7 @@ async def answer(office: Office, p: Prospect, question: str) -> None:
     }
     await sales._status(office, sales.CLOSER, "working", f"respondendo {p.company}")
     out = await office.llm.complete_json(
-        kind="insighta.answer", system="Você é Mercúrio, do comercial da Insighta. Responde gestores de clínica com clareza e honestidade.",
+        kind="insighta.answer", system=sales_skills.system("Você é Mercúrio, do comercial da Insighta. Responde gestores de clínica com clareza e honestidade.", "negotiate" if PRICE_Q.search(question) else "answer"),
         prompt=(f"Mensagem da clínica:\n{question[:2000]}\n\nOFERTA (use só isto, sem inventar preço, prazo ou resultado): {json.dumps(facts, ensure_ascii=False)}\n"
                 "Responda em até 120 palavras e convide a começar o teste grátis (link adicionado depois) ou marcar uma demonstração respondendo. Retorne JSON: {\"body\": \"...\"}"),
         tier="worker", agent_id=sales.CLOSER, context={"prospect": p.company, "offer": facts},

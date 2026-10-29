@@ -29,7 +29,7 @@ import httpx
 from sqlalchemy import func, select
 
 from app.core import diagnosis as dg
-from app.core import mailer
+from app.core import mailer, sales_skills
 from app.db import session_scope
 from app.llm.base import BudgetExceeded
 from app.models import AgentState, Client, Diagnosis, EmailLog, Prospect, RevenueEntry
@@ -251,7 +251,7 @@ async def _compose(office: Office, p: Prospect, d: Diagnosis, touch: int) -> tup
     }
     out = await office.llm.complete_json(
         kind="sales.email",
-        system=f"Você é Mercúrio, consultor da {st.agency_name}. Escreve e-mails B2B curtos, humanos e honestos em português do Brasil.",
+        system=sales_skills.system(f"Você é Mercúrio, consultor da {st.agency_name}. Escreve e-mails B2B curtos, humanos e honestos em português do Brasil.", "first_touch" if touch == 1 else "followup"),
         prompt=(
             f"FATOS (use só estes): {json.dumps(facts, ensure_ascii=False)}\n"
             f"Escreva o e-mail {'de entrega do diagnóstico que a empresa pediu' if p.consent else ('de primeiro contato' if touch == 1 else f'de acompanhamento nº {touch - 1} (curto, sem insistir)')}. "
@@ -338,7 +338,7 @@ async def classify(office: Office, text: str) -> str:
     if AUTO.search(text):
         return "automatica"
     out = await office.llm.complete_json(
-        kind="sales.classify", system="Você classifica respostas a e-mails comerciais.",
+        kind="sales.classify", system=sales_skills.system("Você classifica respostas a e-mails comerciais.", "classify"),
         prompt=f"Resposta recebida:\n{text[:2000]}\n\nClassifique em: interessado | duvida | nao | descadastrar | automatica. Retorne JSON: {{\"intent\": \"...\"}}",
         tier="judge", agent_id=CLOSER, context={"text": text},
     )
@@ -387,7 +387,7 @@ async def _answer(office: Office, p: Prospect, question: str) -> None:
     }
     await _status(office, CLOSER, "working", f"respondendo {p.company}")
     out = await office.llm.complete_json(
-        kind="sales.answer", system=f"Você é Mercúrio, consultor da {st.agency_name}. Responde clientes com clareza e honestidade.",
+        kind="sales.answer", system=sales_skills.system(f"Você é Mercúrio, consultor da {st.agency_name}. Responde clientes com clareza e honestidade.", "answer"),
         prompt=(f"Mensagem do cliente:\n{question[:2000]}\n\nOFERTA (use só isto, sem inventar preço, prazo ou resultado): {json.dumps(offer, ensure_ascii=False)}\n"
                 "Responda a dúvida em até 120 palavras e convide a ver a proposta. Retorne JSON: {\"body\": \"...\"}"),
         tier="worker", agent_id=CLOSER, context={"prospect": p.company, "offer": offer},
@@ -594,6 +594,26 @@ async def tick(office: Office, *, force: bool = False) -> dict[str, Any]:
     return out
 
 
+def pipeline_metrics(funnel: dict[str, int], *, monthly_price_brl: float) -> dict[str, Any]:
+    """Governança de dados (playbook 13): taxas por etapa com o tamanho da amostra e previsão em faixa, nunca um número só."""
+    n = lambda *k: sum(funnel.get(x, 0) for x in k)  # noqa: E731
+    contacted = n("contatado", "proposta", "cliente", "perdido", "descadastrado")
+    engaged = n("proposta", "cliente")
+    won = n("cliente")
+
+    def rate(num: int, den: int) -> dict[str, Any]:
+        return {"rate": round(num / den, 3) if den else None, "sample": den, "reliable": den >= 30}
+
+    to_won = rate(won, engaged)
+    p_win = to_won["rate"] if to_won["reliable"] else 0.15  # padrão conservador até haver 30 casos
+    open_deals = n("proposta")
+    return {
+        "contacted_to_engaged": rate(engaged, contacted), "engaged_to_won": to_won,
+        "forecast_brl_month": {"conservative": round(open_deals * p_win * 0.6 * monthly_price_brl, 2), "likely": round(open_deals * p_win * monthly_price_brl, 2),
+                               "open_deals": open_deals, "win_probability": p_win, "probability_source": "observed" if to_won["reliable"] else "default"},
+    }
+
+
 async def summary(office: Office) -> dict[str, Any]:
     async with session_scope() as s:
         funnel = dict((await s.execute(select(Prospect.status, func.count()).group_by(Prospect.status))).all())
@@ -609,7 +629,8 @@ async def summary(office: Office) -> dict[str, Any]:
         "business": office.settings.business, "insighta": await insighta.summary(office) if insighta.enabled(office) else None,
         "enabled": gov["sales_enabled"], "auto_send": gov["sales_auto_send"], "cap": gov["sales_daily_email_cap"],
         "sent_today": await emails_sent_today(), "send_window": in_send_window(), "health": health(office),
-        "funnel": funnel, "mrr_brl": round(sum(c.mrr_brl for c in clients if c.status == "ativo"), 2),
+        "skills": sales_skills.catalog(), "funnel": funnel, "metrics": pipeline_metrics(funnel, monthly_price_brl=office.settings.insighta_price_founders_brl if insighta.enabled(office) else office.settings.price_mensal_brl),
+        "mrr_brl": round(sum(c.mrr_brl for c in clients if c.status == "ativo"), 2),
         "prices": {"diagnostico": office.settings.price_diagnostico_brl, "mensal": office.settings.price_mensal_brl},
         "prospects": [{"id": p.id, "company": p.company, "domain": p.domain, "email": p.email, "segment": p.segment, "city": p.city, "source": p.source, "status": p.status,
                        "touches": p.touches, "last_contact_at": p.last_contact_at, "score": (scores.get(p.diagnosis_id) or {}).get("overall"),

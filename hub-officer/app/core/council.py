@@ -117,7 +117,8 @@ async def _sales_facts(office: Office) -> dict[str, Any]:
 
     s = await sales.summary(office)
     return {"ligado": s["enabled"], "funil": s["funnel"], "receita_mensal_brl": s["mrr_brl"], "precos_brl": s["prices"],
-            "emails_hoje": s["sent_today"], "integracoes": s["health"], "clientes": len(s["clients"])}
+            "emails_hoje": s["sent_today"], "integracoes": s["health"], "clientes": len(s["clients"]),
+            "conversao_e_previsao": s["metrics"]}
 
 
 async def _niche_facts() -> list[dict[str, Any]]:
