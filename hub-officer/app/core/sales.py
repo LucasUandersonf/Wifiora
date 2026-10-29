@@ -597,7 +597,7 @@ async def tick(office: Office, *, force: bool = False) -> dict[str, Any]:
 def pipeline_metrics(funnel: dict[str, int], *, monthly_price_brl: float) -> dict[str, Any]:
     """Governança de dados (playbook 13): taxas por etapa com o tamanho da amostra e previsão em faixa, nunca um número só."""
     n = lambda *k: sum(funnel.get(x, 0) for x in k)  # noqa: E731
-    contacted = n("contatado", "proposta", "cliente", "perdido", "descadastrado")
+    contacted = n("contatado", "proposta", "cliente", "perdido", "descadastrado", "desqualificado")
     engaged = n("proposta", "cliente")
     won = n("cliente")
 
@@ -609,6 +609,7 @@ def pipeline_metrics(funnel: dict[str, int], *, monthly_price_brl: float) -> dic
     open_deals = n("proposta")
     return {
         "contacted_to_engaged": rate(engaged, contacted), "engaged_to_won": to_won,
+        "disqualified": n("desqualificado"),
         "forecast_brl_month": {"conservative": round(open_deals * p_win * 0.6 * monthly_price_brl, 2), "likely": round(open_deals * p_win * monthly_price_brl, 2),
                                "open_deals": open_deals, "win_probability": p_win, "probability_source": "observed" if to_won["reliable"] else "default"},
     }

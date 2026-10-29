@@ -234,34 +234,84 @@ async def compose(office: Office, p: Prospect, touch: int) -> tuple[str, str]:
     return subject, f"{body}\n\nCalcule a perda da sua clínica: {calculator_link(office, p, touch)}{sales.footer(office, p)}"
 
 
+def two_options(o: dict[str, Any]) -> dict[str, dict[str, str]]:
+    """No máximo duas opções (playbook 42): a ideal e a enxuta. Rede/Enterprise só se o cliente for rede."""
+    ideal = (("Pro Founders", f"R$ {o['founders_brl']:.0f}/mês, preço travado ({o['founders_remaining']} vaga(s) restante(s))") if o["founders_remaining"]
+             else ("Pro", f"R$ {o['pro_brl']:.0f}/mês"))
+    return {"ideal": {"plano": ideal[0], "preco": ideal[1], "resolve": "visão completa: faturamento x caixa, glosas, faltas, CRM e resumo executivo"},
+            "enxuta": {"plano": "Basic", "preco": f"R$ {o['basic_brl']:.0f}/mês", "resolve": "o essencial para clínicas menores (até 1.500 atendimentos/mês)"}}
+
+
+def action_plan(trial_days: int, start: Any = None) -> list[dict[str, str]]:
+    """Plano de Ação Conjunto (playbook 41) com datas reais, de trás para frente a partir do fim do teste."""
+    from datetime import datetime, timedelta
+
+    d0 = (start or datetime.now(sales.SP)).date()
+    day = lambda n: (d0 + timedelta(days=n)).strftime("%d/%m")  # noqa: E731
+    last = max(trial_days - 1, 3)
+    return [
+        {"data": day(0), "quem": "vocês", "passo": "criar a conta do teste grátis (sem cartão)"},
+        {"data": day(2), "quem": "vocês", "passo": "importar a agenda e o faturamento do último mês — é aqui que os números da clínica aparecem"},
+        {"data": day(min(5, last - 2)), "quem": "nós e vocês", "passo": "revisão opcional de 15 minutos sobre o que os números mostram (é só responder este e-mail)"},
+        {"data": day(min(7, last - 1)), "quem": "vocês", "passo": "mostrar o painel ao sócio/decisor"},
+        {"data": day(last), "quem": "vocês", "passo": "decidir: escolher um plano ou encerrar a conta, sem cobrança surpresa"},
+    ]
+
+
+def _plan_text(plan: list[dict[str, str]]) -> str:
+    return "\n".join(f"  {s['data']} · {s['quem']}: {s['passo']}" for s in plan)
+
+
 async def answer(office: Office, p: Prospect, question: str) -> None:
-    """Resposta a quem respondeu com interesse/dúvida: tira a dúvida e leva ao teste grátis (o cadastro é self-service)."""
+    """Resposta a quem respondeu: desqualifica rápido quem não tem fit; aos demais, 2 opções + Plano de Ação Conjunto + teste grátis."""
+    from datetime import UTC, datetime
+
     st = office.settings
     o = await offer(office)
+    options, plan = two_options(o), action_plan(int(o["trial_days"] or 14))
     facts = {
-        "planos": {"Basic": f"R$ {o['basic_brl']:.0f}/mês", "Pro": f"R$ {o['pro_brl']:.0f}/mês", "Pro Founders": f"R$ {o['founders_brl']:.0f}/mês, preço travado"},
-        "vagas_founders_restantes": o["founders_remaining"], "teste_gratis_dias": o["trial_days"], "teste_sem_cartao": True,
+        "opcoes": options, "teste_gratis_dias": o["trial_days"], "teste_sem_cartao": True,
         "o_que_faz": ["painel de faturamento x caixa", "risco de glosa por convênio", "faltas e agenda", "CRM de pacientes", "resumo executivo"],
+        "o_que_precisa_para_comecar": "exportar a agenda e o faturamento do último mês do sistema atual",
+        "plano_de_acao_conjunto": plan,
     }
     await sales._status(office, sales.CLOSER, "working", f"respondendo {p.company}")
     out = await office.llm.complete_json(
         kind="insighta.answer", system=sales_skills.system("Você é Mercúrio, do comercial da Insighta. Responde gestores de clínica com clareza e honestidade.", "negotiate" if PRICE_Q.search(question) else "answer"),
-        prompt=(f"Mensagem da clínica:\n{question[:2000]}\n\nOFERTA (use só isto, sem inventar preço, prazo ou resultado): {json.dumps(facts, ensure_ascii=False)}\n"
-                "Responda em até 120 palavras e convide a começar o teste grátis (link adicionado depois) ou marcar uma demonstração respondendo. Retorne JSON: {\"body\": \"...\"}"),
+        prompt=(f"Mensagem da clínica ({p.segment}, {p.city}):\n{question[:2000]}\n\nFATOS (use só isto, sem inventar preço, prazo ou resultado): {json.dumps(facts, ensure_ascii=False)}\n"
+                "1) Julgue a qualificação pelos 3 portões (dor urgente, capacidade, fit). Se um portão está claramente fechado, qualified=false e o body sai educadamente "
+                "da conversa, sem link. 2) Se qualificada: responda a dúvida, apresente no máximo as 2 opções com uma recomendação, e proponha o plano de ação "
+                "(ele é anexado depois, não reescreva as datas). Até 130 palavras. "
+                'Retorne JSON: {"qualified": true|false, "reason": "motivo curto e factual", "body": "..."}'),
         tier="worker", agent_id=sales.CLOSER, context={"prospect": p.company, "offer": facts},
     )
-    body = str(out.get("body") or "").strip()
+    body, reason = str(out.get("body") or "").strip(), str(out.get("reason") or "").strip()[:300]
+    qualified = out.get("qualified") is not False
+    now = datetime.now(UTC)
+    if not qualified:  # desqualificação rápida (playbook 24): encerra com honestidade, sem proposta nem follow-up
+        if not body or sales.BANNED.search(body):
+            body = (f"Obrigado pela conversa! Pelo que você contou, não acho que a Insighta se pagaria para a {p.company} neste momento, "
+                    "e prefiro não tomar o seu tempo. Se a situação mudar, é só responder este e-mail.")
+        await mailer.send(st, to=p.email, subject=f"Re: Insighta para a {p.company}", body=body + sales.footer(office, p), kind="resposta", prospect_id=p.id, transactional=True)
+        await sales._set(p.id, status="desqualificado", last_contact_at=now, notes=(p.notes + f"\ndesqualificado: {reason or 'sem fit'}").strip())
+        await sales._status(office, sales.CLOSER, "idle", f"{p.company} desqualificada: {reason or 'sem fit'}")
+        await sales._say(office, sales.CLOSER, "founder", f"{p.company} desqualificada rápido ({reason or 'sem fit'})")
+        return
     if not body or sales.BANNED.search(body):
-        body = (f"Obrigado pelo retorno! O jeito mais rápido de ver a Insighta com os números da {p.company} é o teste de {o['trial_days']} dias, sem cartão. "
-                "Se preferir, responda com dois horários e marcamos uma demonstração de 20 minutos.")
-    body += f"\n\nComeçar o teste grátis: {signup_link(office, p)}{sales.footer(office, p)}"
+        ideal, lean = options["ideal"], options["enxuta"]
+        body = (f"Obrigado pelo retorno! Para a {p.company} eu vejo duas opções:\n"
+                f"• {ideal['plano']} ({ideal['preco']}): {ideal['resolve']}. É a que eu recomendo.\n"
+                f"• {lean['plano']} ({lean['preco']}): {lean['resolve']}.\n\n"
+                f"Antes de decidir, dá para testar com os números reais da clínica por {o['trial_days']} dias, sem cartão.")
+    body += (f"\n\nProposta de plano de ação (ajuste as datas com a gente se precisar):\n{_plan_text(plan)}"
+             f"\n\nComeçar o teste grátis: {signup_link(office, p)}{sales.footer(office, p)}")
     await mailer.send(st, to=p.email, subject=f"Re: Insighta para a {p.company}", body=body, kind="resposta", prospect_id=p.id, transactional=True)
-    from datetime import UTC, datetime
-
-    await sales._set(p.id, status="proposta", last_contact_at=datetime.now(UTC))
-    await sales._status(office, sales.CLOSER, "idle", f"link do teste enviado a {p.company}")
-    await sales._say(office, sales.CLOSER, "founder", f"{p.company} respondeu com interesse: link do teste grátis enviado")
-    await office.alert("info", sales.CLOSER, f"{p.company} ({p.city}) respondeu com interesse — vale uma ligação humana.")
+    # handover (playbook 61): o contexto vai para o CRM — quem assumir não faz o cliente repetir nada
+    brief = f"\n[{now:%d/%m}] handover: pediu/disse: {question[:300]!r} · qualificada: {reason or 'sim'} · plano até {plan[-1]['data']}"
+    await sales._set(p.id, status="proposta", last_contact_at=now, notes=(p.notes + brief).strip())
+    await sales._status(office, sales.CLOSER, "idle", f"2 opções + plano de ação enviados a {p.company}")
+    await sales._say(office, sales.CLOSER, "founder", f"{p.company} respondeu com interesse: 2 opções, plano de ação e link do teste enviados")
+    await office.alert("info", sales.CLOSER, f"{p.company} ({p.city}) qualificada — vale uma ligação humana antes de {plan[2]['data']}.")
 
 
 # ------------------------------------------------------------------ painel

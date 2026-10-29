@@ -11,14 +11,16 @@ from pathlib import Path
 
 DIR = Path(__file__).resolve().parent.parent / "playbooks" / "sales"
 
-# Bloco 1: infraestrutura · Bloco 2: prospecção · Bloco 3: diagnóstico · Bloco 4: negociação e fechamento
+# 1 infraestrutura · 2 prospecção e qualificação estrita · 3 diagnóstico · 4 solução conjunta (MAP, 2 opções)
+# 5 negociação Harvard e desarmamento de risco · 6 onboarding e handover
 TASKS: dict[str, tuple[str, ...]] = {
-    "prospect": ("11_role_specialization", "21_ideal_customer_profile"),
+    "prospect": ("11_role_specialization", "21_ideal_customer_profile", "24_fast_disqualification"),
     "first_touch": ("21_ideal_customer_profile", "22_cadence_design", "23_persuasion_hooks"),
-    "followup": ("22_cadence_design", "23_persuasion_hooks", "44_value_followup"),
-    "classify": ("42_invisible_objections",),
-    "answer": ("31_spin_challenger_discovery", "32_consensus_engineering", "33_value_demonstration", "42_invisible_objections", "43_loss_aversion_reduction"),
-    "negotiate": ("41_harvard_negotiation", "42_invisible_objections", "43_loss_aversion_reduction"),
+    "followup": ("22_cadence_design", "23_persuasion_hooks", "54_value_followup"),
+    "classify": ("24_fast_disqualification", "52_invisible_objections"),
+    "answer": ("24_fast_disqualification", "31_spin_challenger_discovery", "32_consensus_engineering", "41_mutual_action_plan", "42_option_paralysis", "61_onboarding_handover"),
+    "negotiate": ("42_option_paralysis", "51_harvard_negotiation", "52_invisible_objections", "53_loss_aversion_reduction", "41_mutual_action_plan"),
+    "onboarding": ("61_onboarding_handover", "33_value_demonstration"),
     "management": ("12_process_architecture", "13_data_governance"),
 }
 ALWAYS = "00_operating_principles"

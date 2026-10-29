@@ -1,5 +1,17 @@
 # Block 1 · Process architecture: playbook, cadences and management rituals
 
+## The six-block flow (each block is a gate; nothing skips a gate)
+1. **Infrastructure & governance**: roles, playbook, rituals, clean data.
+2. **Prospecting & strict qualification**: the filter that **eliminates leads without fit** (fast disqualification).
+3. **Psychological engineering & diagnosis**: amplified pain, buying committee, value demo.
+4. **Joint solution building**: the Mutual Action Plan built with the buyer, and at most two options.
+5. **Harvard negotiation & risk disarmament**: interests over positions, invisible objections, loss aversion, value follow-up.
+6. **Risk-free onboarding & handover**: delivery validated before the close; Customer Success inherits the full context.
+
+**Seller posture:** a facilitator of the buyer's internal decision process and a mitigator of risk, not a persuader.
+- Keep **few, high-fit opportunities** open, and close the rest fast.
+- A proposal is never sent alone; it travels with the MAP.
+
 ## The sales playbook is the single source of truth
 - **It contains:**
   - the ICP;

@@ -1,4 +1,4 @@
-# Block 4 · Reducing loss aversion: guarantees, social proof and pilots
+# Block 5 · Reducing loss aversion: guarantees, social proof and pilots
 
 People weigh a potential loss about twice as heavily as an equal gain. Buying something new feels like risking a loss. Lower the perceived risk of saying yes, and make the cost of the status quo visible.
 

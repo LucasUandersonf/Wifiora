@@ -1,4 +1,4 @@
-# Block 4 · Managing invisible objections
+# Block 5 · Managing invisible objections
 
 The objections that kill deals are rarely said out loud. Behind "send me more information", "I'll think about it" or silence there is usually one of three fears: **risk, credibility or timing**.
 

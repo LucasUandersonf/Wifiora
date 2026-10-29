@@ -282,7 +282,7 @@ async function refreshAiData() {
 setInterval(() => { if (token && !$("#app").classList.contains("hidden")) { refreshAiData(); refreshViability(); refreshCouncil(); refreshNiches(); refreshDiagnoses(); refreshSales(); } }, 60000);
 
 // ------------------------------------------------------------------ comercial automático
-const P_STATUS = { novo: "novo", sem_contato: "sem e-mail", diagnosticado: "diagnosticado", contatado: "contatado", respondeu: "respondeu", proposta: "proposta enviada", cliente: "cliente", perdido: "perdido", descadastrado: "descadastrado" };
+const P_STATUS = { novo: "novo", sem_contato: "sem e-mail", diagnosticado: "diagnosticado", contatado: "contatado", respondeu: "respondeu", proposta: "proposta enviada", cliente: "cliente", perdido: "perdido", descadastrado: "descadastrado", desqualificado: "desqualificado (sem fit)" };
 const HEALTH = { smtp: "E-mail de envio (SMTP)", imap: "Leitura de respostas (IMAP)", payment_links: "Links de pagamento", stripe_webhook: "Confirmação de pagamento (Stripe)", web_search: "Busca na web (prospecção)", web_fetch: "Leitura de sites", company_cnpj: "CNPJ no rodapé", public_url: "Domínio público" };
 const brl = (v) => (v == null ? "—" : Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
 async function refreshSales() {

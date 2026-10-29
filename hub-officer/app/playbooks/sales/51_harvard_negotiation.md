@@ -1,4 +1,4 @@
-# Block 4 · Principled negotiation (Harvard method)
+# Block 5 · Principled negotiation (Harvard method)
 
 Negotiate value, not discounts. The four principles (Fisher & Ury, *Getting to Yes*), applied to B2B SaaS:
 

@@ -1,4 +1,4 @@
-# Block 4 · Continuous engagement: value-based follow-up
+# Block 5 · Continuous engagement: value-based follow-up
 
 After a proposal or a trial invitation, every follow-up must give the buyer a reason to re-engage. **Never** write "just checking whether you had a chance to look at it". That message transfers work to the buyer and signals you have nothing to add.
 
