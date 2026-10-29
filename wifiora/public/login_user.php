@@ -1,5 +1,0 @@
-<?php
-require_once __DIR__ . '/../app/Controllers/UserAuthController.php';
-
-$auth = new UserAuthController();
-$auth->login_user($_POST);
