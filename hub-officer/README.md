@@ -171,6 +171,19 @@ No painel (seção **Comercial automático**) você liga e desliga o funil, vê 
 - publicar o kit no site do cliente, que é feito pela equipe dele;
 - emitir nota fiscal (dá para automatizar pelo provedor de pagamento).
 
+## Modo Insighta (o escritório como comercial e marketing do SaaS)
+
+Com `BUSINESS=insighta`, o comercial vende a Insighta (inteligência de dados para clínicas) em vez dos serviços da agência:
+
+- **Diana** busca clínicas pela **API oficial do Google Maps** (Places API New; nada de raspar o Maps) e o e-mail comercial no site da própria clínica. Do Maps só guardamos o `place_id`, como pedem os termos do Google.
+- **Mercúrio** envia e-mail sobre a dor do tipo de clínica (glosa, faltas, caixa) com link para a calculadora e UTM; responde, **desqualifica rápido** quem não tem fit e manda **2 opções + Plano de Ação Conjunto com datas + link do teste grátis** para quem tem.
+- Preços, vagas Founders e dias de teste vêm **ao vivo** de `GET /public/founders` da API da Insighta.
+- **Calíope** (conteúdo) escreve 1 página por semana a partir da pauta (glosa, recurso de glosa, faltas, repasse, TISS…) → o fundador aprova no painel → a página sai em Markdown + JSON-LD para publicar no site da Insighta. Números no texto geram alerta de conferência.
+- **Argos** (GEO técnico) audita a landing toda semana (indexação liberada, JSON-LD, sitemap, `llms.txt`).
+- As habilidades de vendas sênior (6 blocos) e o playbook de conteúdo ficam em `app/playbooks/` (em inglês, para os modelos).
+
+Antes de ligar de verdade: veja `docs/insighta/PARA_VENDER_DE_VERDADE.md` (o que contratar e quanto custa) e `docs/insighta/AUDITORIA_GEO_LANDING.md`.
+
 ## Rastreador de IA (ChatGPT, Claude e Perplexity)
 
 O diagnóstico vira um rastreador de várias IAs quando as chaves estão configuradas:

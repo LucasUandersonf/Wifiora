@@ -53,7 +53,7 @@
 
   <section id="sales">
     <h2>Comercial automático <span class="muted small" id="sales-meta"></span></h2>
-    <p class="muted small">Diana acha empresas → Mercator diagnostica → Mercúrio envia, acompanha e responde → o cliente paga pela proposta → Héstia entrega o kit e os relatórios mensais. Você só acompanha.</p>
+    <p class="muted small" id="sales-desc"></p>
     <div class="row wrap">
       <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="sales-enabled"> Comercial ligado</label>
       <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="sales-auto"> Enviar e-mails sozinho</label>
@@ -61,11 +61,23 @@
       <button id="sales-run" style="flex:none">Rodar uma volta agora</button>
     </div>
     <div id="sales-health" class="small" style="margin:10px 0"></div>
+    <div id="sales-insighta" class="small" style="margin:10px 0"></div>
     <div class="kpis" id="sales-kpis"></div>
     <div class="grid2">
       <div class="card"><h3>Empresas no funil</h3><div class="scroll"><table class="tbl" id="tbl-prospects"></table></div></div>
       <div class="card"><h3>Clientes</h3><div class="scroll"><table class="tbl" id="tbl-clients"></table></div><h3>Últimos e-mails</h3><div class="scroll"><table class="tbl" id="tbl-emails"></table></div></div>
     </div>
+  </section>
+
+  <section id="content">
+    <h2>Conteúdo &amp; GEO da Insighta <span class="muted small" id="content-meta"></span></h2>
+    <p class="muted small">Calíope escreve 1 página por semana a partir da pauta (dúvidas reais de gestores de clínica) → você aprova ou rejeita → a página aprovada sai pronta (Markdown + JSON-LD) para publicar no site da Insighta. Argos audita a landing toda semana.</p>
+    <div class="row wrap">
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="content-enabled"> Time de conteúdo ligado</label>
+      <button id="content-run" style="flex:none">Escrever o próximo rascunho agora</button>
+    </div>
+    <div id="content-audit" class="small" style="margin:10px 0"></div>
+    <div class="card"><div class="scroll"><table class="tbl" id="tbl-content"></table></div></div>
   </section>
 
   <section id="diagnoses">

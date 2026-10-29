@@ -1,0 +1,19 @@
+# Insighta
+
+> Sistema de inteligência artificial para gestão de clínicas no Brasil. Junta agenda, faturamento, convênios e financeiro, confere glosa, repasse de convênio e agenda todos os dias e mostra, em reais, quanto do que a clínica fatura chega ao caixa. Funciona sobre o sistema que a clínica já usa (sem trocar de ERP), a partir de exportações e planilhas.
+
+Público: donos, sócios e gestores administrativos/financeiros de clínicas (odontologia, fisioterapia, imagem, laboratório, medicina, estética, oftalmologia, psicologia) e redes com várias unidades.
+
+## Produto
+- [Página principal](__SITE_URL__/): o que o Insighta faz, como funciona em três passos, comparação com ERP, planilha e consultoria
+- [Calculadora de perda](__SITE_URL__/#calculadora): estima quanto a clínica tem em jogo por mês com glosas, faltas e repasses
+- [Planos e preços](__SITE_URL__/#planos): Basic, Pro, Pro Founders (vagas limitadas, preço travado) e Redes sob consulta
+- [Perguntas frequentes](__SITE_URL__/#faq): dados de pacientes e IA, teste grátis, garantia, uso no celular, redes
+
+## Fatos
+- Teste grátis do plano Pro por 14 dias, sem cartão.
+- Basic: R$ 490/mês (até 1.500 atendimentos/mês). Pro: R$ 1.290/mês (até 8.000). Pro Founders: R$ 800/mês com preço travado e garantia de 90 dias, vagas limitadas.
+- Os números exibidos vêm dos dados da própria clínica; a IA não inventa números.
+
+## Opcional
+- [Começar o teste](__APP_URL__/signup)

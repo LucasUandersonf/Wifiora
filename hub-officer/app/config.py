@@ -137,6 +137,8 @@ class Settings(BaseSettings):
     insighta_price_pro_brl: float = 1290.0
     insighta_price_founders_brl: float = 800.0
     insighta_trial_days: int = 14
+    content_enabled: bool = False  # time de Conteúdo & GEO: 1 rascunho por semana para aprovação + auditoria da landing
+    content_interval_hours: int = 168
     google_maps_api_key: str | None = None  # Places API (New) — busca oficial no Google Maps, paga por chamada
     places_daily_call_cap: int = 10  # buscas no Google Maps por dia (cada uma traz até 20 clínicas)
     places_cost_per_call_usd: float = 0.035  # ESTIMATIVA para o livro-caixa — confira a tabela oficial do Google

@@ -382,5 +382,23 @@ class MockLLM(LLMClient):
         det = float(req.context.get("deterministic_score", 0.8))
         return {"score": round(min(1.0, det + 0.05), 2), "feedback": "Saída coerente com o objetivo." if det >= 0.75 else "Corrigir os checks reprovados."}
 
+    # ------------------------------------------------------------- Insighta (comercial e conteúdo)
+    def _insighta_email(self, req: LLMRequest) -> dict:
+        f = req.context.get("facts", {})
+        if req.context.get("touch", 1) > 1:
+            return {"subject": f"{f.get('clinica')}: a conta leva 2 minutos", "body": f"(Demonstração) Uma pergunta rápida: a {f.get('clinica')} sabe hoje quanto perdeu com {f.get('dor_tipica')} no último mês?"}
+        return {"subject": f"{f.get('clinica')}: quanto do faturamento chega ao caixa?",
+                "body": f"(Demonstração) Olá, equipe da {f.get('clinica')}. Em clínicas como a de vocês é comum perder dinheiro com {f.get('dor_tipica')} sem ver o número. "
+                        f"A calculadora abaixo estima o valor em 2 minutos, e o teste com os dados reais é grátis por {f.get('teste_gratis_dias')} dias."}
+
+    def _insighta_answer(self, req: LLMRequest) -> dict:
+        return {"qualified": True, "reason": "demonstração", "body": ""}  # o texto padrão (2 opções + plano) entra pelo código
+
+    def _insighta_article(self, req: LLMRequest) -> dict:
+        t = req.context.get("title", "")
+        return {"title": t, "meta_description": f"(Demonstração) {t}: o que é, por que importa e o que fazer na sua clínica.",
+                "body_markdown": f"(Demonstração) Resposta direta sobre {req.context.get('keyword', '')}.\n\n## Por que isso importa\n\nTexto de exemplo.\n\n## Passo a passo\n\n1. Primeiro passo.\n2. Segundo passo.",
+                "faq": [{"q": f"{t}?", "a": "(Demonstração) Resposta curta."}], "sources": ["ANS — padrão TISS"]}
+
     def _generic(self, req: LLMRequest) -> dict:
         return {"result": "ok", "kind": req.kind}

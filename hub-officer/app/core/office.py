@@ -42,6 +42,7 @@ class Office:
         self.quota_rest_until: datetime | None = None
         self._tasks: list[asyncio.Task[Any]] = []
         self.background: set[asyncio.Task[Any]] = set()  # tarefas avulsas (mantém referência até terminar)
+        self.content_audit: dict[str, Any] | None = None  # última auditoria GEO da landing da Insighta (Argos)
         self.started_at: datetime | None = None
 
     # ------------------------------------------------------------ lifecycle
@@ -55,6 +56,10 @@ class Office:
         from app.core import sales
 
         await sales.register_personas()
+        if self.settings.business == "insighta":
+            from app.core import insighta_content
+
+            await insighta_content.register_personas()
         agents, self.scouts_by_sector = build_org(self)
         self.agents = {a.agent_id: a for a in agents}
         self.started_at = datetime.now(UTC)
@@ -68,6 +73,7 @@ class Office:
             self._tasks.append(asyncio.create_task(self._radar_scheduler(), name="radar-scheduler"))
             self._tasks.append(asyncio.create_task(self._viability_scheduler(), name="viability-scheduler"))
             self._tasks.append(asyncio.create_task(self._sales_scheduler(), name="sales-scheduler"))
+            self._tasks.append(asyncio.create_task(self._content_scheduler(), name="content-scheduler"))
         log.info("escritório online: %d agentes, LLM=%s, bus=%s", len(agents), self.llm.client.provider, self.bus.name)
 
     def spawn(self, coro: Any) -> asyncio.Task[Any]:
@@ -169,6 +175,19 @@ class Office:
             except Exception:  # noqa: BLE001
                 log.exception("erro no comercial automático")
             await asyncio.sleep(max(300, self.settings.sales_interval_seconds))
+
+    async def _content_scheduler(self) -> None:
+        """Conteúdo & GEO da Insighta: 1 rascunho para aprovação + auditoria da landing a cada `content_interval_hours`."""
+        from app.core import insighta_content
+
+        await asyncio.sleep(120)
+        while True:
+            try:
+                if not await self.gov.get("paused") and not self.resting():
+                    await insighta_content.tick(self)
+            except Exception:  # noqa: BLE001
+                log.exception("erro no time de conteúdo")
+            await asyncio.sleep(max(3600, self.settings.content_interval_hours * 3600))
 
     async def trigger_cycle(self, by: str = "scheduler", niche: str | None = None) -> None:
         await self.dispatch(Envelope(type="cycle.start", sender=by, recipient="cvo", payload={"niche": niche} if niche else {}, summary="iniciar ciclo estratégico"))

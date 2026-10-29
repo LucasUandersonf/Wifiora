@@ -205,6 +205,30 @@ async def convene_council(body: CouncilIn, office: Office = Depends(get_office))
     return {"ok": True, "topic": body.topic}
 
 
+@router.post("/content/run")
+async def content_run(office: Office = Depends(get_office)) -> dict[str, Any]:
+    """Escreve agora o próximo rascunho da pauta e audita a landing da Insighta."""
+    from app.core import insighta_content
+
+    return await insighta_content.tick(office, force=True)
+
+
+class ContentDecision(BaseModel):
+    approve: bool
+    note: str = Field(default="", max_length=1000)
+
+
+@router.post("/content/{piece_id}/decide")
+async def content_decide(piece_id: str, body: ContentDecision) -> dict[str, Any]:
+    """Fundador aprova ou rejeita um rascunho (nada vai ao ar sem isso)."""
+    from app.core import insighta_content
+
+    p = await insighta_content.decide(piece_id, body.approve, body.note)
+    if p is None:
+        raise HTTPException(404, "conteúdo não encontrado")
+    return {"id": p.id, "status": p.status}
+
+
 @router.post("/sales/run")
 async def sales_run(office: Office = Depends(get_office)) -> dict[str, Any]:
     """Roda agora uma volta do funil comercial (mesmo com o comercial desligado, para testar)."""

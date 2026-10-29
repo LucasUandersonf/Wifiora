@@ -678,3 +678,26 @@ class Client(Base):
     payment_ref: Mapped[str] = mapped_column(String(200), default="")
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     next_report_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class ContentPiece(Base):
+    """Página de conteúdo (blog GEO) da Insighta: pauta → rascunho (IA) → aprovado/rejeitado pelo fundador → publicado."""
+
+    __tablename__ = "content_pieces"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    slug: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(300))
+    keyword: Mapped[str] = mapped_column(String(200), default="")
+    cluster: Mapped[str] = mapped_column(String(60), default="")  # glosa | faturamento | agenda | financeiro | gestao
+    intent: Mapped[str] = mapped_column(String(16), default="problema")  # problema (→ calculadora) | solucao (→ teste grátis)
+    brief: Mapped[str] = mapped_column(Text, default="")  # o que a página precisa cobrir e fontes oficiais permitidas
+    status: Mapped[str] = mapped_column(String(16), default="pauta", index=True)  # pauta | rascunho | aprovado | rejeitado | publicado
+    meta_description: Mapped[str] = mapped_column(String(300), default="")
+    body_md: Mapped[str] = mapped_column(Text, default="")
+    faq: Mapped[list] = mapped_column(JSON, default=list)
+    sources: Mapped[list] = mapped_column(JSON, default=list)
+    review_notes: Mapped[str] = mapped_column(Text, default="")  # alertas automáticos (números a conferir etc.)
+    priority: Mapped[int] = mapped_column(Integer, default=50)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

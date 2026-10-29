@@ -279,7 +279,7 @@ async function refreshAiData() {
       <td>${dateBR(b.last_at)}<div class="muted small">${esc(b.last_path)}</div></td></tr>`).join("") || '<tr><td colspan="6" class="muted">Nenhum robô de IA registrado ainda. Depois do deploy com domínio próprio, os acessos aparecem aqui.</td></tr>');
   } catch (e) { /* segue */ }
 }
-setInterval(() => { if (token && !$("#app").classList.contains("hidden")) { refreshAiData(); refreshViability(); refreshCouncil(); refreshNiches(); refreshDiagnoses(); refreshSales(); } }, 60000);
+setInterval(() => { if (token && !$("#app").classList.contains("hidden")) { refreshAiData(); refreshViability(); refreshCouncil(); refreshNiches(); refreshDiagnoses(); refreshSales(); refreshContent(); } }, 60000);
 
 // ------------------------------------------------------------------ comercial automático
 const P_STATUS = { novo: "novo", sem_contato: "sem e-mail", diagnosticado: "diagnosticado", contatado: "contatado", respondeu: "respondeu", proposta: "proposta enviada", cliente: "cliente", perdido: "perdido", descadastrado: "descadastrado", desqualificado: "desqualificado (sem fit)" };
@@ -291,16 +291,24 @@ async function refreshSales() {
     const d = await api("/api/office/sales");
     $("#sales-enabled").checked = d.enabled; $("#sales-auto").checked = d.auto_send; $("#sales-cap").value = d.cap;
     $("#sales-meta").textContent = `${d.enabled ? "ligado" : "desligado"} · e-mails hoje ${d.sent_today}/${d.cap} · ${d.send_window ? "dentro" : "fora"} do horário comercial`;
-    $("#sales-health").innerHTML = Object.entries(HEALTH).map(([k, label]) => `<span class="badge ${d.health[k] ? "b-approved" : "b-warning"}" style="margin:2px">${d.health[k] ? "✓" : "✗"} ${esc(label)}</span>`).join(" ") +
-      (!d.health.smtp ? '<div class="muted small" style="margin-top:6px">Sem SMTP os e-mails ficam “simulados” (aparecem aqui, mas não saem). Sem busca na web, só entram empresas que pedirem o diagnóstico em /diagnostico-gratis.</div>' : "");
+    const saas = d.business === "insighta";
+    $("#sales-desc").textContent = saas ? "Diana acha clínicas no Google Maps → Mercúrio envia e-mail sobre a dor da clínica com a calculadora, faz até 2 follow-ups e responde → quem não tem fit é desqualificado; quem tem recebe 2 opções, plano de ação e o link do teste grátis. Você só acompanha (e liga para quem se interessou)."
+      : "Diana acha empresas → Mercator diagnostica → Mercúrio envia, acompanha e responde → o cliente paga pela proposta → Héstia entrega o kit e os relatórios mensais. Você só acompanha.";
+    $("#sales-health").innerHTML = Object.entries(HEALTH).filter(([k]) => !saas || !["payment_links", "stripe_webhook", "web_search"].includes(k)).map(([k, label]) => `<span class="badge ${d.health[k] ? "b-approved" : "b-warning"}" style="margin:2px">${d.health[k] ? "✓" : "✗"} ${esc(label)}</span>`).join(" ") +
+      (!d.health.smtp ? `<div class="muted small" style="margin-top:6px">Sem SMTP os e-mails ficam “simulados” (aparecem aqui, mas não saem). ${saas ? "Sem a chave do Google Maps, Diana não encontra clínicas novas." : "Sem busca na web, só entram empresas que pedirem o diagnóstico em /diagnostico-gratis."}</div>` : "");
+    const ins = d.insighta;
+    $("#sales-insighta").innerHTML = ins ? `<strong>Vendendo a Insighta</strong> · Founders ${brl(ins.offer.founders_brl)}/mês${ins.offer.founders_remaining != null ? ` (${ins.offer.founders_remaining} de ${ins.offer.founders_total} vagas)` : ""} · Pro ${brl(ins.offer.pro_brl)} · Basic ${brl(ins.offer.basic_brl)} · teste ${ins.offer.trial_days} dias
+      ${ins.offer.live ? '<span class="badge b-approved">preços ao vivo da API</span>' : '<span class="badge b-warning">preços da configuração (API da Insighta não respondeu)</span>'}
+      <br>Google Maps: ${ins.maps_ready ? `${ins.maps_calls_today}/${ins.maps_cap} buscas hoje` : '<span class="badge b-warning">sem chave (GOOGLE_MAPS_API_KEY)</span>'} · ${ins.segments.length} tipos de clínica × ${ins.cities.length} cidades
+      ${d.metrics ? `<br>Conversão: contatadas→interessadas ${d.metrics.contacted_to_engaged.rate == null ? "—" : Math.round(100 * d.metrics.contacted_to_engaged.rate) + "%"} (amostra ${d.metrics.contacted_to_engaged.sample}) · desqualificadas ${d.metrics.disqualified} · previsão ${brl(d.metrics.forecast_brl_month.conservative)}–${brl(d.metrics.forecast_brl_month.likely)}/mês (${d.metrics.forecast_brl_month.probability_source === "observed" ? "taxa observada" : "taxa padrão, poucos dados"})` : ""}` : "";
     const f = d.funnel, n = (k) => f[k] || 0;
-    $("#sales-kpis").innerHTML = [["Empresas", Object.values(f).reduce((a, b) => a + b, 0)], ["Diagnosticadas", n("diagnosticado") + n("contatado") + n("proposta") + n("cliente") + n("perdido")], ["Contatadas", n("contatado") + n("proposta") + n("cliente") + n("perdido")], ["Com proposta", n("proposta") + n("cliente")], ["Clientes", n("cliente")], ["Receita mensal", brl(d.mrr_brl)]]
+    $("#sales-kpis").innerHTML = (saas ? [["Clínicas", Object.values(f).reduce((a, b) => a + b, 0)], ["Sem e-mail", n("sem_contato")], ["Contatadas", n("contatado") + n("proposta") + n("perdido") + n("desqualificado")], ["Interessadas (teste enviado)", n("proposta")], ["Desqualificadas", n("desqualificado")], ["Vagas Founders", ins && ins.offer.founders_remaining != null ? `${ins.offer.founders_remaining}/${ins.offer.founders_total}` : "—"]] : [["Empresas", Object.values(f).reduce((a, b) => a + b, 0)], ["Diagnosticadas", n("diagnosticado") + n("contatado") + n("proposta") + n("cliente") + n("perdido")], ["Contatadas", n("contatado") + n("proposta") + n("cliente") + n("perdido")], ["Com proposta", n("proposta") + n("cliente")], ["Clientes", n("cliente")], ["Receita mensal", brl(d.mrr_brl)]])
       .map(([l, v]) => `<div><strong>${typeof v === "number" ? num(v) : esc(v)}</strong><span>${esc(l)}</span></div>`).join("");
     $("#tbl-prospects").innerHTML = "<tr><th>Empresa</th><th>Status</th><th class=num>Nota</th><th class=num>Contatos</th><th></th></tr>" + (d.prospects.map((p) => `<tr>
       <td><strong>${esc(p.company)}</strong><div class="muted small">${esc(p.email || p.domain)} · ${esc(p.segment)}${p.source === "inbound" ? " · pediu pelo site" : ""}</div></td>
       <td>${esc(P_STATUS[p.status] || p.status)}${p.last_contact_at ? `<div class="muted small">${dateBR(p.last_contact_at)}</div>` : ""}</td>
       <td class=num>${p.score ?? "—"}</td><td class=num>${p.touches}</td>
-      <td class="small">${p.report ? `<a href="${esc(p.report)}" target="_blank" rel="noopener">relatório</a> · ` : ""}<a href="${esc(p.proposal)}" target="_blank" rel="noopener">proposta</a></td></tr>`).join("") || '<tr><td colspan="5" class="muted">Nenhuma empresa ainda.</td></tr>');
+      <td class="small">${p.report ? `<a href="${esc(p.report)}" target="_blank" rel="noopener">relatório</a> · ` : ""}${saas ? esc(p.city || "") : `<a href="${esc(p.proposal)}" target="_blank" rel="noopener">proposta</a>`}</td></tr>`).join("") || '<tr><td colspan="5" class="muted">Nenhuma empresa ainda.</td></tr>');
     $("#tbl-clients").innerHTML = "<tr><th>Cliente</th><th>Plano</th><th class=num>Mensal</th><th>Próximo relatório</th></tr>" + (d.clients.map((c) => `<tr>
       <td><a href="${esc(c.page)}" target="_blank" rel="noopener">${esc(c.company)}</a><div class="muted small">${esc(c.status)} · ${c.reports} relatório(s)</div></td><td>${esc(c.plan)}</td><td class=num>${brl(c.mrr_brl)}</td><td>${dateBR(c.next_report_at)}</td></tr>`).join("") || '<tr><td colspan="4" class="muted">Nenhum cliente ainda.</td></tr>');
     $("#tbl-emails").innerHTML = "<tr><th>Quando</th><th>E-mail</th><th>Status</th></tr>" + (d.emails.map((e) => `<tr>
@@ -313,6 +321,40 @@ $("#sales-enabled").addEventListener("change", (ev) => saveSales({ sales_enabled
 $("#sales-auto").addEventListener("change", (ev) => saveSales({ sales_auto_send: ev.target.checked }));
 $("#sales-cap").addEventListener("change", (ev) => saveSales({ sales_daily_email_cap: Number(ev.target.value) }));
 $("#sales-run").addEventListener("click", async () => { toast("Rodando o funil… pode levar alguns minutos."); try { await post("/api/control/sales/run"); } catch (e) { toast(e.message); } refreshSales(); refreshDiagnoses(); });
+
+// ------------------------------------------------------------------ conteúdo & GEO (Insighta)
+const C_STATUS = { pauta: "na pauta", rascunho: "rascunho — aprovar?", aprovado: "aprovado", rejeitado: "rejeitado", publicado: "publicado" };
+async function refreshContent() {
+  if (document.activeElement?.closest("#content .row")) return;
+  try {
+    const d = await api("/api/office/content");
+    $("#content-enabled").checked = d.enabled;
+    $("#content-meta").textContent = Object.entries(d.counts).map(([k, v]) => `${v} ${C_STATUS[k] || k}`).join(" · ");
+    const a = d.audit;
+    $("#content-audit").innerHTML = !a ? '<span class="muted">Landing ainda não auditada.</span>' : !a.checked ? `<span class="badge b-warning">Auditoria da landing: ${esc(a.reason)}</span>`
+      : `Landing: ${a.score ?? "—"}/100 · ` + Object.entries(a.checks).map(([k, v]) => `<span class="badge ${v ? "b-approved" : "b-warning"}" style="margin:2px">${v ? "✓" : "✗"} ${esc(k)}</span>`).join(" ");
+    $("#tbl-content").innerHTML = "<tr><th>Página</th><th>Status</th><th></th></tr>" + (d.pieces.map((p) => `<tr>
+      <td><strong>${esc(p.title)}</strong><div class="muted small">${esc(p.keyword)} · ${p.intent === "problema" ? "leva à calculadora" : "leva ao teste grátis"}${p.flags.length ? ` · <span style="color:#b45309">${p.flags.length} alerta(s): ${esc(p.flags.slice(0, 3).join("; "))}</span>` : ""}</div></td>
+      <td>${esc(C_STATUS[p.status] || p.status)}</td>
+      <td class="small" style="white-space:nowrap">${["rascunho", "aprovado"].includes(p.status) ? `<a href="#" data-md="${p.id}">ver página</a>` : ""}
+        ${p.status === "rascunho" ? ` · <a href="#" data-ok="${p.id}">aprovar</a> · <a href="#" data-no="${p.id}">rejeitar</a>` : ""}</td></tr>`).join("") || '<tr><td colspan="3" class="muted">Pauta vazia (ligue o modo Insighta: BUSINESS=insighta).</td></tr>');
+  } catch (e) { /* segue */ }
+}
+$("#tbl-content").addEventListener("click", async (ev) => {
+  const el = ev.target.closest("a[data-md],a[data-ok],a[data-no]"); if (!el) return; ev.preventDefault();
+  try {
+    if (el.dataset.md) {
+      const res = await fetch(`/api/office/content/${el.dataset.md}.md`, { headers: { "X-Founder-Token": token } });
+      const url = URL.createObjectURL(new Blob([await res.text()], { type: "text/plain;charset=utf-8" })); window.open(url, "_blank");
+    } else {
+      const approve = !!el.dataset.ok, note = approve ? "" : (prompt("Motivo (ajuda a Calíope a melhorar):") || "");
+      await post(`/api/control/content/${el.dataset.ok || el.dataset.no}/decide`, { approve, note }); toast(approve ? "Aprovado: pronto para publicar." : "Rejeitado.");
+    }
+  } catch (e) { toast(e.message); }
+  refreshContent();
+});
+$("#content-enabled").addEventListener("change", async (ev) => { try { await api("/api/control/settings", { method: "PATCH", body: JSON.stringify({ content_enabled: ev.target.checked }) }); toast("Time de conteúdo atualizado."); document.activeElement.blur(); } catch (e) { toast(e.message); } refreshContent(); });
+$("#content-run").addEventListener("click", async () => { toast("Escrevendo o próximo rascunho…"); try { await post("/api/control/content/run"); } catch (e) { toast(e.message); } refreshContent(); });
 
 // ------------------------------------------------------------------ diagnósticos (produto de entrada)
 let TRACKER = null;
@@ -504,7 +546,7 @@ $("#login-form").addEventListener("submit", async (ev) => {
 async function start() {
   if (!token) return showLogin();
   await refresh();
-  if (!$("#app").classList.contains("hidden")) { await loadLog().catch(() => {}); connectStream(); refreshPortal(); refreshAiData(); refreshViability(); refreshCouncil(); refreshNiches(); refreshDiagnoses(); refreshSales(); }
+  if (!$("#app").classList.contains("hidden")) { await loadLog().catch(() => {}); connectStream(); refreshPortal(); refreshAiData(); refreshViability(); refreshCouncil(); refreshNiches(); refreshDiagnoses(); refreshSales(); refreshContent(); }
 }
 setInterval(() => { if (token && !$("#app").classList.contains("hidden")) refresh(); }, 5000);
 start();

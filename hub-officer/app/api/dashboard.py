@@ -7,7 +7,7 @@ import json
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import case, func, select
 
 from app.api.deps import get_office, require_founder
@@ -266,6 +266,28 @@ async def diagnoses(limit: int = 30) -> list[dict[str, Any]]:
              "query_count": d.query_count, "gaps": len((d.visibility or {}).get("gaps") or [])}
             for d in rows
         ]
+
+
+@router.get("/content")
+async def content_panel(office: Office = Depends(get_office)) -> dict[str, Any]:
+    from app.core import insighta_content
+
+    return await insighta_content.summary(office)
+
+
+@router.get("/content/{piece_id}.md")
+async def content_markdown(piece_id: str, office: Office = Depends(get_office)) -> Response:
+    """Página pronta para publicar no site da Insighta (Markdown + JSON-LD)."""
+    from app.core import insighta_content
+    from app.db import session_scope
+    from app.models import ContentPiece
+
+    async with session_scope() as s:
+        p = await s.get(ContentPiece, piece_id)
+    if p is None:
+        raise HTTPException(404, "conteúdo não encontrado")
+    return Response(insighta_content.export_markdown(office, p), media_type="text/markdown; charset=utf-8",
+                    headers={"Content-Disposition": f'inline; filename="{p.slug}.md"'})
 
 
 @router.get("/sales")
