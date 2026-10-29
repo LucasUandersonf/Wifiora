@@ -1,0 +1,17 @@
+{% extends "_public_base.html" %}
+{% block title %}Dados abertos · {{ brand }}{% endblock %}
+{% block description %}Baixe os dados verificados em JSON, JSONL, CSV, Markdown e JSON-LD. Licença CC BY 4.0.{% endblock %}
+{% block head %}<link rel="canonical" href="{{ base_url }}/dados">
+<script type="application/ld+json">{{ jsonld_text | safe }}</script>{% endblock %}
+{% block body %}
+<nav class="crumbs" aria-label="Navegação"><a href="{{ base_url }}/">Início</a> › Dados abertos</nav>
+<h1>Dados abertos</h1>
+<p>Todo o conteúdo verificado pode ser baixado em lote, de graça, sob a licença <a href="https://creativecommons.org/licenses/by/4.0/deed.pt_BR">CC BY 4.0</a>: use à vontade, citando a fonte. Para histórico de versões, busca entre hubs e filtro por data de atualização, use a API v1 (com chave).</p>
+<h2>Site inteiro</h2>
+<ul>{% for f in site_files %}<li><a href="{{ f.url }}">{{ f.name }}</a> <span class="muted">({{ f.format }})</span></li>{% endfor %}</ul>
+<h2>Por hub</h2>
+{% for h in hubs %}<section><h3><a href="{{ base_url }}/hub/{{ h.slug }}">{{ h.title }}</a></h3>
+<p class="muted">{{ h.records }} registros · atualizado em {{ h.updated_at|date_br }}{% if h.demo_data %} · demonstração{% endif %}</p>
+<ul>{% for f in h.files %}<li><a href="{{ f.url }}">{{ f.url.rsplit('/',1)[1] }}</a> <span class="muted">— {{ f.name }}</span></li>{% endfor %}</ul></section>
+{% else %}<p class="muted">Nenhum hub publicado ainda.</p>{% endfor %}
+{% endblock %}

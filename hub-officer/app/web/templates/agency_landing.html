@@ -1,0 +1,29 @@
+{% extends "_public_base.html" %}
+{% block title %}Diagnóstico grátis: sua empresa aparece no ChatGPT? · {{ agency }}{% endblock %}
+{% block description %}Descubra se o ChatGPT e outras IAs recomendam a sua empresa — e o que fazer para aparecer. Diagnóstico gratuito por e-mail.{% endblock %}
+{% block head %}<link rel="canonical" href="{{ base_url }}/diagnostico-gratis">{% endblock %}
+{% block body %}
+<p class="muted">{{ agency }}</p>
+<h1>Sua empresa aparece quando alguém pergunta ao ChatGPT?</h1>
+<p>Cada vez mais clientes perguntam a assistentes de IA antes de comprar: “qual a melhor loja de…”, “vale a pena…”, “onde comprar…”.
+Nós fazemos essas perguntas por você e mostramos quem a IA recomenda — você ou os concorrentes — e o que fazer para aparecer.</p>
+<ul>
+  <li>Perguntas reais de compra do seu segmento, respondidas por IA</li>
+  <li>Quem é citado: você x concorrentes</li>
+  <li>Se o seu site está pronto para as IAs (robôs liberados, dados estruturados)</li>
+  <li>Plano de ação e ideias de anúncios no ChatGPT</li>
+</ul>
+{% if sent %}<p class="done">Pedido recebido! O diagnóstico chega no seu e-mail assim que ficar pronto.</p>{% else %}
+<form class="card" method="post" action="{{ base_url }}/diagnostico-gratis">
+  <label class="hp" aria-hidden="true">Não preencha <input name="website" tabindex="-1" autocomplete="off"></label>
+  <label>Empresa <input name="company" required maxlength="200" autocomplete="organization"></label>
+  <label>Site <input name="site" maxlength="500" placeholder="suaempresa.com.br"></label>
+  <label>O que vocês vendem? <input name="segment" required maxlength="300" placeholder="ex.: loja online de suplementos"></label>
+  <label>Cidade/região (opcional) <input name="city" maxlength="120"></label>
+  <label>Seu nome <input name="name" maxlength="160" autocomplete="name"></label>
+  <label>E-mail <input name="email" type="email" required maxlength="200" autocomplete="email"></label>
+  <label class="check"><input type="checkbox" name="consent" value="1" required> Autorizo o envio do diagnóstico e de mensagens sobre ele para este e-mail (posso cancelar quando quiser).</label>
+  <button type="submit">Quero meu diagnóstico grátis</button>
+</form>{% endif %}
+<p class="muted">As respostas das IAs variam com a pergunta e o dia: o diagnóstico é um retrato, não uma garantia. Veja a <a href="{{ base_url }}/privacidade">política de privacidade</a>.</p>
+{% endblock %}

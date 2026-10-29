@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest>=8
+pytest-asyncio>=0.23
+# Provedores opcionais via SDK (o modo LLM_PROVIDER=free não precisa de nenhum):
+# openai>=1.40
+# google-genai>=1.0

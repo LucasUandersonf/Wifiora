@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>GEO Office · Escritório Virtual</title>
+<link rel="stylesheet" href="/static/office.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7z" fill="var(--violet)"/><path d="M12 2 21 7l-9 5-9-5z" fill="#fff" opacity=".35"/></svg>
+    <div><strong>GEO Office</strong><small>Escritório Virtual Autônomo · Hub Semântico</small></div>
+  </div>
+  <nav class="tabs"><a class="tab on" href="/office">Escritório</a><a class="tab" href="/radar">Radar</a><a class="tab" href="/dashboard">Dashboard</a></nav>
+  <div class="ticker" id="ticker"></div>
+  <span class="chip" id="mode-chip">—</span>
+  <span class="chip live" id="live-chip"><i></i><span>conectando</span></span>
+</header>
+
+<div id="login" class="login hidden">
+  <form id="login-form" class="panel">
+    <h2>Acesso do fundador</h2>
+    <p class="muted">Informe o <code>FOUNDER_TOKEN</code> do ambiente.</p>
+    <input id="token" type="password" autocomplete="current-password" placeholder="FOUNDER_TOKEN" required>
+    <button class="btn primary" type="submit">Entrar</button>
+    <p id="login-error" class="err"></p>
+  </form>
+</div>
+
+<main id="app" class="layout hidden">
+  <section class="floor-wrap">
+    <div class="floor-head">
+      <div><strong>Office Floor</strong> <span class="muted" id="floor-sub"></span></div>
+      <div class="legend">
+        <span><i style="background:var(--c-exec)"></i>Diretoria</span>
+        <span><i style="background:var(--c-research)"></i>Pesquisa &amp; GEO</span>
+        <span><i style="background:var(--c-tech)"></i>Engenharia</span>
+        <span><i style="background:var(--c-finance)"></i>Finanças</span>
+        <span><i style="background:var(--c-quality)"></i>Qualidade</span>
+        <span><i style="background:var(--c-radar)"></i>Radar</span>
+        <span><i style="background:#22c55e"></i>Comercial</span>
+      </div>
+    </div>
+
+    <div class="viewport" id="viewport">
+      <div class="stage" id="stage">
+        <svg id="scene" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="overlay" id="overlay"></div>
+      </div>
+
+      <aside class="cycle-card" id="cycle-card"></aside>
+
+      <div class="controls" role="toolbar" aria-label="Controles do escritório">
+        <button class="btn icon" id="zoom-out" title="Afastar">−</button>
+        <span class="zoom" id="zoom-label">100%</span>
+        <button class="btn icon" id="zoom-in" title="Aproximar">+</button>
+        <button class="btn icon" id="zoom-fit" title="Enquadrar">⤢</button>
+        <span class="sep"></span>
+        <button class="btn violet" id="btn-follow" aria-pressed="false">Seguir CVO</button>
+        <button class="btn" id="btn-cycle">Rodar ciclo</button>
+        <button class="btn" id="btn-pause">Pausar</button>
+        <button class="btn danger" id="btn-kill">Kill switch</button>
+      </div>
+    </div>
+
+    <section class="agent-panel panel hidden" id="agent-panel" aria-live="polite"></section>
+  </section>
+
+  <aside class="side">
+    <section class="panel">
+      <div class="panel-h"><h3>Telemetria</h3><span class="muted small" id="tele-time"></span></div>
+      <div class="tele" id="tele"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-h"><h3>Pauta do ciclo</h3><a class="small" href="/dashboard">Ver dashboard</a></div>
+      <div id="agenda"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-h"><h3>Aprovações do fundador</h3><span class="badge" id="appr-count">0</span></div>
+      <div id="approvals"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-h"><h3>Ata do escritório</h3><span class="muted small">ao vivo</span></div>
+      <ol class="minutes" id="minutes"></ol>
+    </section>
+    <section class="panel">
+      <div class="panel-h"><h3>Diretriz rápida ao CVO</h3></div>
+      <form id="form-directive" class="row">
+        <input id="directive-text" placeholder="ex.: priorize ERPs com API pública" required>
+        <button class="btn primary" type="submit">Enviar</button>
+      </form>
+    </section>
+  </aside>
+</main>
+
+<dialog id="kill-dialog" class="panel">
+  <h3>Acionar kill switch?</h3>
+  <p class="muted">Todos os agentes param, o ciclo ativo é cancelado e as mensagens pendentes nas filas são descartadas. Para voltar, use “Retomar”.</p>
+  <div class="row end"><button class="btn" value="cancel" id="kill-cancel">Cancelar</button><button class="btn danger solid" id="kill-confirm">Parar tudo</button></div>
+</dialog>
+<div id="toast" class="toast hidden" role="status"></div>
+<script src="/static/office.js"></script>
+</body>
+</html>

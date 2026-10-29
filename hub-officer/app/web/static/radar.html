@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>GEO Office · Radar de Ondas</title>
+<link rel="stylesheet" href="/static/office.css">
+<link rel="stylesheet" href="/static/radar.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7z" fill="var(--violet)"/><path d="M12 2 21 7l-9 5-9-5z" fill="#fff" opacity=".35"/></svg>
+    <div><strong>GEO Office</strong><small>Radar de Ondas · inteligência de tendências</small></div>
+  </div>
+  <nav class="tabs"><a class="tab" href="/office">Escritório</a><a class="tab on" href="/radar">Radar</a><a class="tab" href="/dashboard">Dashboard</a></nav>
+  <div class="ticker" id="ticker"></div>
+  <span class="chip" id="mode-chip">—</span>
+</header>
+
+<div id="login" class="login hidden">
+  <form id="login-form" class="panel">
+    <h2>Acesso do fundador</h2>
+    <p class="muted">Informe o <code>FOUNDER_TOKEN</code> do ambiente.</p>
+    <input id="token" type="password" autocomplete="current-password" placeholder="FOUNDER_TOKEN" required>
+    <button class="btn primary" type="submit">Entrar</button>
+    <p id="login-error" class="err"></p>
+  </form>
+</div>
+
+<main id="app" class="radar hidden">
+  <section class="panel brief">
+    <div class="panel-h">
+      <div><h3>Boletim do radar</h3><span class="muted small" id="brief-meta"></span></div>
+      <div class="row nowrap">
+        <span class="chip live" id="run-chip"><i></i><span>—</span></span>
+        <button class="btn primary" id="btn-sweep">Varrer agora</button>
+      </div>
+    </div>
+    <p id="brief-text" class="brief-text"></p>
+  </section>
+
+  <section>
+    <div class="section-h">
+      <h2>Ondas</h2>
+      <p class="muted small">Da esquerda (sinal fraco) para a direita (já virou padrão). Quanto mais forte a borda, maior impacto × urgência para nós.</p>
+    </div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-h"><h3>Ações de posicionamento</h3><span class="muted small">Aprovada, a ação vira uma diretriz para o CVO</span></div>
+    <div class="plays" id="plays"></div>
+  </section>
+
+  <section class="grid-2">
+    <div class="panel">
+      <div class="panel-h"><h3>Sinais recentes</h3><span class="muted small" id="sig-count"></span></div>
+      <ul class="signals" id="signals"></ul>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h3>Fontes</h3><span class="muted small">saúde dos feeds e da busca</span></div>
+      <div id="sources"></div>
+      <h3 class="mt">Configuração</h3>
+      <form id="form-radar" class="cfg">
+        <label class="check"><input type="checkbox" id="cfg-enabled"> Radar ligado</label>
+        <label>Varrer a cada
+          <select id="cfg-interval">
+            <option value="3600">1 hora</option><option value="10800">3 horas</option><option value="21600">6 horas</option>
+            <option value="43200">12 horas</option><option value="86400">1 dia</option><option value="604800">1 semana</option>
+          </select>
+        </label>
+        <button class="btn" type="submit">Salvar</button>
+      </form>
+    </div>
+  </section>
+</main>
+<div id="toast" class="toast hidden" role="status"></div>
+<script src="/static/radar.js"></script>
+</body>
+</html>

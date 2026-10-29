@@ -1,0 +1,42 @@
+{% extends "_public_base.html" %}
+{% block title %}{{ entity.name }} · {{ hub.title }}{% endblock %}
+{% block description %}{{ entity.name }}: dados verificados com fontes oficiais — {{ hub.title }}.{% endblock %}
+{% block robots %}{% if hub.demo_data %}noindex,nofollow{% else %}index,follow,max-snippet:-1{% endif %}{% endblock %}
+{% block head %}<link rel="canonical" href="{{ base_url }}/hub/{{ hub.slug }}/{{ entity.slug }}">
+<script type="application/ld+json">{{ jsonld_text | safe }}</script>{% endblock %}
+{% block body %}
+<nav class="crumbs" aria-label="Navegação"><a href="{{ base_url }}/">Início</a> › <a href="{{ base_url }}/hubs">Hubs</a> › <a href="{{ base_url }}/hub/{{ hub.slug }}">{{ hub.title }}</a> › {{ entity.name }}</nav>
+<h1>{{ entity.name }}</h1>
+<p class="muted">Verificado em <time datetime="{{ entity.verified_at }}">{{ entity.verified_at|date_br }}</time> · versão {{ entity.version }} · {{ (entity.grounding_ratio * 100)|round|int }}% dos valores confirmados literalmente na fonte
+{% if entity.human_reviewed_by %}<br><span class="seal">Validado por especialista</span> {{ entity.human_reviewed_by }}, em {{ entity.human_reviewed_at|date_br }}{% endif %}</p>
+{% if hub.demo_data %}<p class="notice"><strong>Dados de demonstração</strong> (fornecedor fictício).</p>{% endif %}
+
+<table><tbody>
+{% for k, v in entity.attributes.items() %}<tr><th scope="row">{{ k.replace('_',' ') }}</th><td>{{ v|fmt }}</td></tr>{% endfor %}
+{% if entity.provider.razao_social %}<tr><th scope="row">Empresa</th><td>{% if entity.org_slug %}<a href="{{ base_url }}/empresa/{{ entity.org_slug }}">{{ entity.provider.razao_social }}</a>{% else %}{{ entity.provider.razao_social }}{% endif %}{% if entity.provider.municipio %} — {{ entity.provider.municipio }}/{{ entity.provider.uf }}{% endif %}</td></tr>{% endif %}
+</tbody></table>
+
+{% if entity.criteria %}<h2>Critérios objetivos</h2><ul>
+{% for c in entity.criteria %}<li>{% if c.passed is sameas true %}<span class="ok">✓</span>{% elif c.passed is sameas false %}<span class="no">✗</span>{% else %}<span class="no">?</span>{% endif %} {{ c.label }}{% if c.passed is none %} <span class="muted">(dado não disponível)</span>{% endif %}</li>{% endfor %}
+</ul><p class="muted">Calculados a partir dos dados verificados. Não é uma recomendação de compra.</p>{% endif %}
+
+<h2>Fontes</h2><ul>{% for s in entity.sources %}<li><a href="{{ s.url }}" rel="nofollow noopener">{{ s.url }}</a>{% if s.quote %}<br><q class="muted">{{ s.quote }}</q>{% endif %}{% if s.retrieved_at %} <span class="muted">(coletado em {{ s.retrieved_at|date_br }})</span>{% endif %}</li>{% endfor %}</ul>
+
+<h2 id="demonstracao">Solicitar demonstração</h2>
+{% if sent == 'lead' %}<p class="done">Pedido enviado. Vamos encaminhá-lo a {{ entity.name }}.</p>{% else %}
+<form class="card" method="post" action="{{ base_url }}/forms/lead">
+  <input type="hidden" name="hub_slug" value="{{ hub.slug }}"><input type="hidden" name="entity_slug" value="{{ entity.slug }}">
+  <label class="hp" aria-hidden="true">Não preencha <input name="website" tabindex="-1" autocomplete="off"></label>
+  <label>Nome <input name="name" required maxlength="160" autocomplete="name"></label>
+  <label>E-mail profissional <input name="email" type="email" required maxlength="200" autocomplete="email"></label>
+  <label>Telefone (opcional) <input name="phone" maxlength="40" autocomplete="tel"></label>
+  <label>Empresa <input name="company" maxlength="200" autocomplete="organization"></label>
+  <label>Porte <select name="company_size"><option value="">—</option><option>1-10</option><option>11-50</option><option>51-200</option><option>201-1000</option><option>1000+</option></select></label>
+  <label>Mensagem (opcional) <textarea name="message" rows="3" maxlength="2000"></textarea></label>
+  <label class="check"><input type="checkbox" name="consent" value="1" required> <span>Autorizo o envio dos meus dados a {{ entity.name }} para contato comercial, conforme a <a href="{{ base_url }}/privacidade">Política de privacidade</a>.</span></label>
+  <button type="submit">Solicitar demonstração</button>
+</form>{% endif %}
+
+<h2>Versões</h2><ul>{% for v in versions %}<li>v{{ v.version }} — <time datetime="{{ v.at }}">{{ v.at|date_br }}</time>: {{ v.fields|join(', ') }}</li>{% endfor %}</ul>
+<p class="muted">Algum dado errado? <a href="{{ base_url }}/correcoes?hub={{ hub.slug }}&amp;empresa={{ entity.slug }}">Solicitar correção</a></p>
+{% endblock %}

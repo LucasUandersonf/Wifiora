@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-white text-ink antialiased dark:bg-[#0f141a] dark:text-slate-100; }
+  a { @apply text-accent underline-offset-2 hover:underline dark:text-accent-dark; }
+  h1, h2, h3 { text-wrap: balance; }
+  :focus-visible { @apply outline outline-2 outline-offset-2 outline-accent; }
+}
+
+@layer components {
+  .wrap { @apply mx-auto w-full max-w-6xl px-4 sm:px-6; }
+  .muted { @apply text-ink-soft dark:text-slate-400; }
+  .seal { @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-verified-soft px-2.5 py-0.5 text-xs font-semibold text-verified dark:bg-verified-darksoft dark:text-verified-dark; }
+  .notice { @apply my-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200; }
+  .field { @apply w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-ink dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100; }
+  .btn { @apply inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50 dark:bg-accent-dark dark:text-slate-900; }
+  .tbl thead th { @apply border-b border-slate-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-soft dark:border-slate-800 dark:text-slate-400; }
+  .tbl tbody th { @apply border-b border-slate-100 px-3 py-2.5 text-left align-top dark:border-slate-800/70; }
+  .tbl td { @apply border-b border-slate-100 px-3 py-2.5 align-top dark:border-slate-800/70; }
+}

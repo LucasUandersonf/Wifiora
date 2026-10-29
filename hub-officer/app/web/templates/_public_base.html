@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ brand }}{% endblock %}</title>
+<meta name="description" content="{% block description %}Dados estruturados e verificados sobre o mercado B2B brasileiro.{% endblock %}">
+<meta name="robots" content="{% block robots %}index,follow,max-snippet:-1{% endblock %}">
+{% block head %}{% endblock %}
+<style>
+:root{--fg:#1a1d23;--muted:#5b6270;--bg:#fff;--line:#e3e6ea;--accent:#0b6bcb;--warn-bg:#fff6db;--warn-fg:#6b4d00;--ok:#0f7a4f;--ok-bg:#e6f6ee;--field:#f6f7f9}
+@media (prefers-color-scheme:dark){:root{--fg:#e7e9ec;--muted:#a2a8b3;--bg:#111317;--line:#2a2e35;--accent:#5aa9ff;--warn-bg:#3a3010;--warn-fg:#ffe08a;--ok:#5fd39b;--ok-bg:#12291f;--field:#1a1d23}}
+*{box-sizing:border-box}body{margin:0;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg)}
+main{max-width:1040px;margin:0 auto;padding:24px 16px}a{color:var(--accent)}h1{font-size:1.7rem;line-height:1.25}
+nav.crumbs{font-size:.9rem;color:var(--muted)}nav.crumbs a{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted)}td.num{text-align:right;font-variant-numeric:tabular-nums}.wrap{overflow-x:auto}
+.muted{color:var(--muted);font-size:.9rem}.notice{background:var(--warn-bg);color:var(--warn-fg);padding:10px 14px;border-radius:8px;margin:12px 0}
+.seal{display:inline-block;background:var(--ok-bg);color:var(--ok);border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.ok{color:var(--ok)}.no{color:var(--muted)}
+form.card{border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:10px;max-width:560px}
+label{display:grid;gap:4px;font-size:.9rem}input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--fg)}
+.check{display:flex;gap:8px;align-items:flex-start}.check input{margin-top:4px}
+button{font:inherit;font-weight:600;padding:9px 16px;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer;justify-self:start}
+.hp{position:absolute;left:-9999px}
+.done{background:var(--ok-bg);color:var(--ok);padding:10px 14px;border-radius:8px}
+footer{border-top:1px solid var(--line);margin-top:40px;padding-top:16px;display:flex;flex-wrap:wrap;gap:6px 14px}
+</style>
+</head>
+<body><main>{% block body %}{% endblock %}
+<footer class="muted"><span>{{ brand }} · Dados abertos (CC BY 4.0)</span>{% for label, href in footer_links %}<a href="{{ base_url }}{{ href }}">{{ label }}</a>{% endfor %}<a href="{{ base_url }}/llms.txt">llms.txt</a></footer>
+</main></body></html>
