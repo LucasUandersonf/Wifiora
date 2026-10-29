@@ -1,0 +1,30 @@
+{% extends "_public_base.html" %}
+{% block title %}{{ c.company }} · Área do cliente · {{ agency }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block head %}<style>pre{background:var(--field);padding:12px;border-radius:8px;overflow:auto;font-size:.82rem;white-space:pre-wrap}</style>{% endblock %}
+{% block body %}
+<p class="muted">{{ agency }} · Área do cliente</p>
+<h1>{{ c.company }}</h1>
+<p class="muted">Plano {{ 'acompanhamento mensal' if c.plan == 'mensal' else 'diagnóstico completo' }} · desde {{ c.started_at.strftime('%d/%m/%Y') }}{% if c.next_report_at %} · próximo relatório em {{ c.next_report_at.strftime('%d/%m/%Y') }}{% endif %}</p>
+<h2>Relatórios</h2>
+<table><thead><tr><th>Data</th><th class="num">Nota</th><th class="num">Citado</th><th></th></tr></thead><tbody>
+{% for r in reports %}<tr><td>{{ r.created_at.strftime('%d/%m/%Y') }}</td><td class="num">{{ r.scores.overall if r.scores else '—' }}</td><td class="num">{{ r.scores.visibility if r.scores else '—' }}%</td><td><a href="{{ base_url }}/relatorio/{{ r.token }}">abrir</a></td></tr>{% endfor %}
+</tbody></table>
+{% if kit %}
+<h2>Kit de GEO para o seu site</h2>
+<p class="notice">Antes de publicar, troque os trechos <strong>[CONFIRMAR: …]</strong> por dados reais da empresa.</p>
+{% if kit.quick_wins %}<h3>Prioridades</h3><ol>{% for q in kit.quick_wins %}<li>{{ q }}</li>{% endfor %}</ol>{% endif %}
+<h3>1. robots.txt (liberar os robôs de IA)</h3><pre>{{ kit.robots_txt }}</pre>
+<h3>2. Dados da empresa (cole no &lt;head&gt; da página inicial)</h3><pre>&lt;script type="application/ld+json"&gt;
+{{ org_ld }}
+&lt;/script&gt;</pre>
+{% if kit.faq %}<h3>3. Perguntas frequentes (página + dados estruturados)</h3>
+{% for f in kit.faq %}<p><strong>{{ f.q }}</strong><br>{{ f.a }}</p>{% endfor %}
+<pre>&lt;script type="application/ld+json"&gt;
+{{ faq_ld }}
+&lt;/script&gt;</pre>{% endif %}
+{% if kit.llms_txt %}<h3>4. llms.txt (publique em /llms.txt)</h3><pre>{{ kit.llms_txt }}</pre>{% endif %}
+{% if kit.about %}<h3>5. Texto "Quem somos"</h3><p>{{ kit.about }}</p>{% endif %}
+{% if kit.ad_drafts %}<h3>6. Anúncios no ChatGPT (rascunhos)</h3>{% for a in kit.ad_drafts %}<p class="muted">Quando perguntarem: “{{ a.query }}”</p><p><strong>{{ a.headline }}</strong><br>{{ a.text }}</p>{% endfor %}{% endif %}
+{% endif %}
+{% endblock %}

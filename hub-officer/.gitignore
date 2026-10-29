@@ -1,0 +1,9 @@
+.env
+*.db
+__pycache__/
+.pytest_cache/
+.venv/
+dump.rdb
+*.log
+portal/.next/
+portal/node_modules/

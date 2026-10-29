@@ -1,0 +1,27 @@
+{% extends "_public_base.html" %}
+{% block title %}{{ page.title }} · {{ brand }}{% endblock %}
+{% block description %}{{ page.description }}{% endblock %}
+{% block head %}<link rel="canonical" href="{{ base_url }}/{{ page.slug }}">{% endblock %}
+{% block body %}
+<nav class="crumbs" aria-label="Navegação"><a href="{{ base_url }}/">Início</a> › {{ page.title }}</nav>
+<h1>{{ page.title }}</h1>
+<p class="muted">{{ page.description }}</p>
+{% if page.draft %}<p class="notice"><strong>Minuta.</strong> Texto-base que precisa de revisão jurídica antes do lançamento.</p>{% endif %}
+{% for s in page.sections %}
+{% if s.h %}<h2>{{ s.h }}</h2>{% endif %}
+{% for p in s.p or [] %}<p>{{ p }}</p>{% endfor %}
+{% if s.list %}<ul>{% for li in s.list %}<li>{{ li }}</li>{% endfor %}</ul>{% endif %}
+{% endfor %}
+{% if page.form == 'correction' %}
+{% if sent == 'correction' %}<p class="done">Pedido recebido. Vamos analisar e responder pelo e-mail informado.</p>{% else %}
+<form class="card" method="post" action="{{ base_url }}/forms/correction">
+  <label class="hp" aria-hidden="true">Não preencha <input name="website" tabindex="-1" autocomplete="off"></label>
+  <input type="hidden" name="hub_slug" value="{{ prefill.hub or '' }}"><input type="hidden" name="entity_slug" value="{{ prefill.empresa or '' }}">
+  <label>Nome <input name="name" required maxlength="160" autocomplete="name"></label>
+  <label>E-mail <input name="email" type="email" required maxlength="200" autocomplete="email"></label>
+  <label>Empresa (opcional) <input name="company" maxlength="200" autocomplete="organization"></label>
+  <label>O que está errado? <textarea name="message" rows="4" required maxlength="4000">{% if prefill.empresa %}Ficha: {{ prefill.empresa }} — {% endif %}</textarea></label>
+  <label>Link da fonte oficial <input name="evidence_url" type="url" maxlength="500" placeholder="https://"></label>
+  <button type="submit">Enviar correção</button>
+</form>{% endif %}{% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "_public_base.html" %}
+{% block title %}Descadastro · {{ agency }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block body %}
+<h1>Descadastro</h1>
+{% if done %}<p class="done">Pronto. O endereço {{ p.email }} não receberá mais mensagens da {{ agency }}.</p>
+{% else %}<p>Não quer mais receber mensagens da {{ agency }} em {{ p.email }}?</p>
+<form method="post" action="{{ base_url }}/descadastrar/{{ p.token }}"><button type="submit">Descadastrar</button></form>{% endif %}
+{% endblock %}

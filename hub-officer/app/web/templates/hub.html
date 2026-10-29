@@ -1,0 +1,52 @@
+{% extends "_public_base.html" %}
+{% block title %}{{ hub.title }} · {{ brand }}{% endblock %}
+{% block description %}{{ page.meta_description or hub.description }}{% endblock %}
+{% block robots %}{% if hub.demo_data %}noindex,nofollow{% else %}index,follow,max-snippet:-1{% endif %}{% endblock %}
+{% block head %}<link rel="canonical" href="{{ base_url }}/hub/{{ hub.slug }}">
+<link rel="alternate" type="application/ld+json" href="{{ base_url }}/hub/{{ hub.slug }}/data.jsonld">
+<script type="application/ld+json">{{ jsonld_text | safe }}</script>{% endblock %}
+{% block body %}
+<nav class="crumbs" aria-label="Navegação"><a href="{{ base_url }}/">Início</a> › <a href="{{ base_url }}/hubs">Hubs</a> › {{ hub.title }}</nav>
+<article>
+<h1>{{ hub.title }}</h1>
+<p class="muted">Nicho: {{ hub.niche }} · {{ entities|length }} empresas · Atualizado em <time datetime="{{ hub.updated_at }}">{{ hub.updated_at|date_br }}</time></p>
+{% if hub.demo_data %}<p class="notice"><strong>Dados de demonstração.</strong> Este hub foi gerado em modo de simulação com fornecedores fictícios e não deve ser usado como referência.</p>{% endif %}
+{% if hub.description %}<p>{{ hub.description }}</p>{% endif %}
+
+<section id="tabela">
+<h2>Comparativo</h2>
+<div class="wrap"><table>
+<thead><tr><th scope="col">Nome</th>{% for c in columns %}<th scope="col">{{ c.replace('_',' ') }}</th>{% endfor %}{% if criteria %}<th scope="col">Critérios</th>{% endif %}<th scope="col">Verificado em</th><th scope="col">Fonte</th></tr></thead>
+<tbody>
+{% for e in entities %}<tr>
+<th scope="row"><a href="{{ base_url }}/hub/{{ hub.slug }}/{{ e.slug }}">{{ e.name }}</a>{% if e.human_reviewed %}<br><span class="seal">Validado por especialista</span>{% endif %}</th>
+{% for c in columns %}{% set v = e.attributes.get(c) %}<td{% if v is number and v is not sameas true and v is not sameas false %} class="num"{% endif %}>{{ v|fmt if v is not none else '—' }}</td>{% endfor %}
+{% if criteria %}<td class="num">{{ e.criteria_met }}/{{ e.criteria_total }}</td>{% endif %}
+<td><time datetime="{{ e.verified_at }}">{{ e.verified_at|date_br }}</time></td>
+<td>{% if e.source_url %}<a href="{{ e.source_url }}" rel="nofollow noopener">{{ e.source_url.split('/')[2] if '//' in e.source_url else e.source_url }}</a>{% else %}—{% endif %}</td>
+</tr>{% endfor %}
+</tbody></table></div>
+{% if criteria %}<p class="muted">Critérios objetivos avaliados: {{ criteria|join(' · ') }}. Não publicamos notas nem opiniões.</p>{% endif %}
+</section>
+
+{% if rankings %}<section id="rankings"><h2>Rankings</h2>
+<p class="muted">Ordenações matemáticas a partir dos dados da tabela. Nenhuma empresa paga para mudar de posição.</p>
+{% for r in rankings %}<h3 id="ranking-{{ r.key }}">{{ r.title }}</h3>
+<ol>{% for it in r['items'] %}<li value="{{ it.position }}"><a href="{{ base_url }}/hub/{{ hub.slug }}/{{ it.slug }}">{{ it.name }}</a>{% if it.value_label %} — {{ it.value_label }}{% endif %}</li>{% endfor %}</ol>
+<p class="muted">{{ r.method }}{% if r.missing %} Sem o dado na fonte: {{ r.missing|join(', ') }}.{% endif %}</p>
+{% endfor %}</section>{% endif %}
+
+{% if page.faq %}<section id="faq"><h2>Perguntas frequentes</h2>
+{% for f in page.faq %}<h3>{{ f.q }}</h3><p>{{ f.a }}</p>{% endfor %}</section>{% endif %}
+
+<section id="metodologia"><h2>Como verificamos</h2>
+<p>Cada valor é extraído de uma fonte oficial citada, conferido automaticamente contra o texto da fonte e revisado por um controle de qualidade antes da publicação. <a href="{{ base_url }}/metodologia">Metodologia completa</a> · <a href="{{ base_url }}/correcoes">Encontrou um erro?</a></p></section>
+
+{% if downloads %}<section id="dados"><h2>Dados abertos</h2>
+<p>Baixe esta tabela inteira (licença CC BY 4.0, cite a fonte): {% for d in downloads %}<a href="{{ d.url }}" title="{{ d.name }}">{{ d.file }}</a>{% if not loop.last %} · {% endif %}{% endfor %}. <a href="{{ base_url }}/dados">Todos os arquivos</a></p></section>{% endif %}
+
+{% if changes %}<section id="historico"><h2>Histórico de atualizações</h2><ul>
+{% for c in changes %}<li><time datetime="{{ c.at }}">{{ c.at|date_br }}</time> — {{ c.entity }} v{{ c.version }}: {{ c.fields|join(', ') }}</li>{% endfor %}
+</ul></section>{% endif %}
+</article>
+{% endblock %}

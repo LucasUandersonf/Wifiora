@@ -1,0 +1,7 @@
+{% extends "_public_base.html" %}
+{% block title %}Hubs de dados verificados · {{ brand }}{% endblock %}
+{% block body %}
+<h1>Hubs de dados verificados</h1>
+{% if hubs %}<ul>{% for h in hubs %}<li><a href="{{ base_url }}/hub/{{ h.slug }}">{{ h.title }}</a> <span class="muted">— {{ h.niche }}{% if h.demo_data %} · demonstração{% endif %}</span></li>{% endfor %}</ul>
+{% else %}<p class="muted">Nenhum hub publicado ainda.</p>{% endif %}
+{% endblock %}

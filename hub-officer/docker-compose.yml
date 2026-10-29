@@ -1,0 +1,30 @@
+# Ambiente local espelhando produção: Postgres + Redis + API e worker em processos separados.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: office, POSTGRES_PASSWORD: office, POSTGRES_DB: office }
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD", "pg_isready", "-U", "office"], interval: 5s, retries: 10 }
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  api:
+    build: .
+    env_file: .env
+    environment:
+      OFFICE_ROLE: api
+      DATABASE_URL: postgresql://office:office@postgres:5432/office
+      REDIS_URL: redis://redis:6379/0
+    ports: ["8000:8000"]
+    depends_on: { postgres: { condition: service_healthy }, redis: { condition: service_started } }
+  worker:
+    build: .
+    env_file: .env
+    environment:
+      OFFICE_ROLE: worker
+      DATABASE_URL: postgresql://office:office@postgres:5432/office
+      REDIS_URL: redis://redis:6379/0
+    depends_on: { postgres: { condition: service_healthy }, redis: { condition: service_started } }
+volumes:
+  pgdata:

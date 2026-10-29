@@ -1,0 +1,20 @@
+{% extends "_public_base.html" %}
+{% block title %}Proposta para {{ p.company }} · {{ agency }}{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block head %}<style>.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin:16px 0}
+.plan{border:1px solid var(--line);border-radius:12px;padding:16px}.plan h2{margin-top:0}.price{font-size:1.6rem;font-weight:700}.buy{display:inline-block;margin-top:10px;background:var(--accent);color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none;font-weight:600}</style>{% endblock %}
+{% block body %}
+<p class="muted">{{ agency }} · Proposta</p>
+<h1>{{ p.company }}: aparecer quando o cliente pergunta à IA</h1>
+{% if d and d.status == 'done' %}<p>No diagnóstico, a {{ p.company }} apareceu em <strong>{{ d.scores.visibility }}%</strong> das perguntas de compra (nota geral {{ d.scores.overall }}/100). <a href="{{ base_url }}/relatorio/{{ d.token }}">Ver o diagnóstico</a>.</p>{% endif %}
+<div class="plans">
+  <div class="plan"><h2>Diagnóstico completo + plano</h2><div class="price">{{ prices.diagnostico|brl }}</div><div class="muted">pagamento único</div>
+    <ul><li>Diagnóstico com concorrentes</li><li>Kit de GEO pronto para o site: dados estruturados, perguntas frequentes, llms.txt, robots.txt</li><li>Rascunhos de anúncios no ChatGPT</li></ul>
+    {% if links.diagnostico %}<a class="buy" href="{{ links.diagnostico }}">Contratar</a>{% else %}<p class="notice">Pagamento online em configuração. Responda o e-mail para contratar.</p>{% endif %}</div>
+  <div class="plan"><h2>Acompanhamento mensal</h2><div class="price">{{ prices.mensal|brl }}</div><div class="muted">por mês, cancele quando quiser</div>
+    <ul><li>Tudo do diagnóstico completo</li><li>Novo diagnóstico todo mês, com a evolução</li><li>Novos rascunhos de anúncios no ChatGPT a cada mês</li><li>Página do cliente com histórico</li></ul>
+    {% if links.mensal %}<a class="buy" href="{{ links.mensal }}">Assinar</a>{% else %}<p class="notice">Pagamento online em configuração. Responda o e-mail para contratar.</p>{% endif %}</div>
+</div>
+<h2>O que não está incluído</h2>
+<ul><li>A verba dos anúncios (paga direto à plataforma).</li><li>Promessa de posição ou de resultado: nenhuma IA garante quem será citado. Medimos e melhoramos a sua chance.</li><li>Publicar no seu site: entregamos tudo pronto para a sua equipe colar.</li></ul>
+{% endblock %}

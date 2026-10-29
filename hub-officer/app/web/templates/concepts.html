@@ -1,0 +1,17 @@
+{% extends "_public_base.html" %}
+{% block title %}Conceitos, integrações e empresas · {{ brand }}{% endblock %}
+{% block description %}Mapa dos conceitos, integrações e empresas cobertos pelos hubs, com links para cada produto.{% endblock %}
+{% block head %}<link rel="canonical" href="{{ base_url }}/conceitos">
+<script type="application/ld+json">{{ jsonld_text | safe }}</script>{% endblock %}
+{% block body %}
+<nav class="crumbs" aria-label="Navegação"><a href="{{ base_url }}/">Início</a> › Conceitos</nav>
+<h1>Conceitos, integrações e empresas</h1>
+<p class="muted">Cada termo liga os produtos que o oferecem. Os mesmos identificadores aparecem no <a href="{{ base_url }}/knowledge-graph.jsonld">grafo completo</a>.</p>
+{% for title, items in [('Conceitos', concepts), ('Integrações', integrations)] %}{% if items %}
+<h2>{{ title }}</h2>
+{% for c in items %}<section id="{{ c.slug }}"><h3>{{ c.label }}</h3>
+<p>{% for p in c.products %}<a href="{{ p.url }}">{{ p.name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p></section>{% endfor %}
+{% endif %}{% endfor %}
+{% if orgs %}<h2>Empresas</h2><ul>{% for o in orgs %}<li><a href="{{ base_url }}/empresa/{{ o.slug }}">{{ o.name }}</a> <span class="muted">— {{ o.products }} produto(s)</span></li>{% endfor %}</ul>{% endif %}
+{% if not concepts and not integrations and not orgs %}<p class="muted">Nada publicado ainda.</p>{% endif %}
+{% endblock %}

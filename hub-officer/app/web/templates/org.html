@@ -1,0 +1,25 @@
+{% extends "_public_base.html" %}
+{% block title %}{{ org.name }} · {{ brand }}{% endblock %}
+{% block description %}{{ org.name }}: produtos, integrações e dados cadastrais verificados.{% endblock %}
+{% block robots %}{% if demo_data %}noindex,nofollow{% else %}index,follow,max-snippet:-1{% endif %}{% endblock %}
+{% block head %}<link rel="canonical" href="{{ base_url }}/empresa/{{ org.slug }}">
+<script type="application/ld+json">{{ jsonld_text | safe }}</script>{% endblock %}
+{% block body %}
+<nav class="crumbs" aria-label="Navegação"><a href="{{ base_url }}/">Início</a> › <a href="{{ base_url }}/conceitos">Empresas e conceitos</a> › {{ org.name }}</nav>
+<article>
+<h1>{{ org.name }}</h1>
+{% if demo_data %}<p class="notice"><strong>Dados de demonstração.</strong> Empresa fictícia.</p>{% endif %}
+<table><tbody>
+{% if org.legal_name %}<tr><th scope="row">Razão social</th><td>{{ org.legal_name }}</td></tr>{% endif %}
+{% if org.cnpj %}<tr><th scope="row">CNPJ</th><td>{{ org.cnpj }}</td></tr>{% endif %}
+{% if org.city or org.uf %}<tr><th scope="row">Sede</th><td>{{ org.city or '' }}{% if org.uf %}/{{ org.uf }}{% endif %}</td></tr>{% endif %}
+{% if org.site %}<tr><th scope="row">Site oficial</th><td><a href="{{ org.site }}" rel="nofollow noopener">{{ org.site }}</a></td></tr>{% endif %}
+{% if org.wikidata %}<tr><th scope="row">Wikidata</th><td><a href="https://www.wikidata.org/wiki/{{ org.wikidata }}" rel="noopener">{{ org.wikidata }}</a></td></tr>{% endif %}
+</tbody></table>
+<h2>Produtos</h2>
+<ul>{% for p in products %}<li><a href="{{ p.url }}">{{ p.name }}</a> <span class="muted">— {{ p.hub_title }}</span></li>{% endfor %}</ul>
+{% if integrations %}<h2>Integrações</h2><p>{% for i in integrations %}<a href="{{ base_url }}/conceitos#{{ i|lower|replace(' ','-') }}">{{ i }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+{% if concepts %}<h2>Conceitos</h2><p>{% for c in concepts %}{{ c }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+<p class="muted">Dados cadastrais da Receita Federal (via BrasilAPI) e do site oficial. <a href="{{ base_url }}/correcoes?empresa={{ org.slug }}">Pedir correção</a></p>
+</article>
+{% endblock %}

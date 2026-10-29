@@ -1,0 +1,61 @@
+{% extends "_public_base.html" %}
+{% block title %}Diagnóstico de Visibilidade em IA — {{ d.brand }}{% endblock %}
+{% block description %}Como as IAs (ChatGPT e outras) falam de {{ d.brand }} e dos concorrentes.{% endblock %}
+{% block robots %}noindex,nofollow{% endblock %}
+{% block head %}<style>
+.score{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}.score div{border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:150px}
+.score strong{display:block;font-size:2rem;line-height:1.1}.big{font-size:2.6rem!important}
+.bar{background:var(--field);border-radius:6px;height:10px;overflow:hidden;min-width:120px}.bar i{display:block;height:100%;background:var(--accent)}
+.yes{color:var(--ok);font-weight:600}.nope{color:var(--muted)}td.c{text-align:center}
+.draft{border:1px dashed var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}
+@media print{footer,.noprint{display:none}main{padding:0}a{color:inherit}}
+</style>{% endblock %}
+{% block body %}
+<p class="noprint"><a href="{{ base_url }}/relatorio/{{ d.token }}.pdf">Baixar PDF</a></p>
+<p class="muted">{{ brand }} · Diagnóstico de Visibilidade em IA · {{ d.created_at.strftime('%d/%m/%Y') }}</p>
+<h1>{{ d.brand }}: como as IAs falam de você</h1>
+<p class="muted">Segmento: {{ d.category }}{% if d.city %} · {{ d.city }}{% endif %}{% if d.site %} · {{ d.site }}{% endif %}</p>
+
+{% if d.status != 'done' %}
+<p class="notice">{% if d.status == 'running' %}Diagnóstico em andamento. Atualize a página em alguns minutos.{% else %}O diagnóstico não terminou: {{ d.error }}{% endif %}</p>
+{% else %}
+<div class="score">
+  <div><span class="muted">Nota geral</span><strong class="big">{{ d.scores.overall }}</strong><span>de 100 · {{ d.scores.grade }}</span></div>
+  <div><span class="muted">Citado pelas IAs</span><strong>{{ d.scores.visibility }}%</strong><span>das perguntas de compra</span></div>
+  <div><span class="muted">Prontidão técnica</span><strong>{{ d.scores.technical if d.scores.technical is not none else '—' }}{% if d.scores.technical is not none %}%{% endif %}</strong><span>{{ 'site verificado' if d.technical.checked else 'não verificado' }}</span></div>
+</div>
+{% if d.plan.summary %}<p><strong>Resumo:</strong> {{ d.plan.summary }}</p>{% endif %}
+
+<h2>Quem as IAs recomendam no seu segmento</h2>
+{% set by_engine = d.visibility.by_engine or {} %}
+<table><thead><tr><th>Marca</th><th>Recomendada em</th><th></th>{% if by_engine|length > 1 %}{% for e in by_engine %}<th class="num">{{ engine_labels.get(e, e) }}</th>{% endfor %}{% endif %}</tr></thead><tbody>
+{% for name, share in ranking %}<tr><th scope="row">{{ name }}{% if name == d.brand %} <span class="seal">você</span>{% endif %}</th><td class="num">{{ (share * 100)|round|int }}%</td><td><div class="bar"><i style="width:{{ (share * 100)|round|int }}%"></i></div></td>{% if by_engine|length > 1 %}{% for e, sh in by_engine.items() %}<td class="num">{{ ((sh.get(name, 0)) * 100)|round|int }}%</td>{% endfor %}{% endif %}</tr>{% endfor %}
+</tbody></table>
+<p class="muted">% de recomendação = respostas que citam a marca ÷ total de respostas ({{ d.visibility.answers or rows|length }} = {{ rows|length }} perguntas × {{ (d.visibility.engines or ['ia'])|length }} IA(s){% if d.visibility.failed %}; {{ d.visibility.failed }} resposta(s) com erro foram descartadas{% endif %}). IAs: {% for e in (d.visibility.engines or []) %}{{ engine_labels.get(e, e) }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+
+<h2>Pergunta por pergunta</h2>
+<p class="muted">Perguntas que um cliente faz antes de comprar. ✓ = a IA citou a marca na resposta.</p>
+<div class="wrap"><table><thead><tr><th>Pergunta</th>{% for n in names %}<th class="c">{{ n }}</th>{% endfor %}</tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.query }}</td>{% for n in names %}<td class="c">{% if n in r.mentioned %}<span class="yes">✓</span>{% else %}<span class="nope">—</span>{% endif %}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div>
+{% if d.visibility.gaps %}<p><strong>Lacunas</strong> (concorrente aparece, você não): {{ d.visibility.gaps|length }} pergunta(s).{% endif %}
+{% if d.visibility.open %} <strong>Terreno livre</strong> (nenhuma marca citada): {{ d.visibility.open|length }} pergunta(s).{% endif %}</p>
+
+<h2>Seu site está pronto para as IAs?</h2>
+{% if tech_checks %}<table><tbody>{% for label, ok in tech_checks %}<tr><td>{{ label }}</td><td class="{{ 'yes' if ok else 'nope' }}">{{ '✓ ok' if ok else '✗ falta' }}</td></tr>{% endfor %}</tbody></table>
+<p class="muted">Robôs de IA: {% for bot, ok in ai_access.items() %}{{ bot }} {{ 'liberado' if ok else 'BLOQUEADO' }}{% if not loop.last %} · {% endif %}{% endfor %}.{% if d.technical.jsonld_types %} Dados estruturados encontrados: {{ d.technical.jsonld_types|join(', ') }}.{% endif %}</p>
+{% else %}<p class="muted">Não verificado: {{ d.technical.reason }}.</p>{% endif %}
+
+<h2>Plano de ação</h2>
+{% if d.plan.quick_wins %}<h3>Ganhos rápidos (aparecer sem pagar)</h3><ol>{% for q in d.plan.quick_wins %}<li>{{ q }}</li>{% endfor %}</ol>{% endif %}
+{% if d.plan.content_ideas %}<h3>Conteúdos que fazem as IAs citarem você</h3><ul>{% for q in d.plan.content_ideas %}<li>{{ q }}</li>{% endfor %}</ul>{% endif %}
+{% if d.plan.ad_drafts %}<h3>Anúncios no ChatGPT (rascunhos para as lacunas)</h3>
+{% for a in d.plan.ad_drafts %}<div class="draft"><div class="muted">Quando alguém perguntar: “{{ a.query }}”</div><strong>{{ a.headline }}</strong><div>{{ a.text }}</div><div class="muted">{{ a.why }}</div></div>{% endfor %}{% endif %}
+
+<h2>Como medimos</h2>
+<p class="muted">Fizemos {{ rows|length }} perguntas de compra {% if d.mode == 'web' %}a {{ (d.visibility.engines or [])|length }} assistente(s) de IA <strong>com busca na web</strong>, pelas APIs oficiais (respostas refletem a internet de hoje; o aplicativo de cada IA pode personalizar por usuário){% else %}a um modelo de IA <strong>sem busca na web</strong> (mostra o que o modelo “sabe”; é uma estimativa){% endif %}
+e verificamos quais marcas foram citadas. As respostas das IAs variam conforme a pergunta, a ferramenta e o dia: trate os números como retrato, não como garantia.
+A verificação técnica olha a página inicial, o robots.txt, o sitemap e o llms.txt do site.</p>
+{% endif %}
+<p class="noprint muted">Para salvar em PDF, use Imprimir → Salvar como PDF.</p>
+{% endblock %}

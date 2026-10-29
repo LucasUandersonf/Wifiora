@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>GEO Office · Painel do Fundador</title>
+<link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><strong>GEO Office</strong><span class="muted">Escritório Virtual Autônomo</span></div>
+  <div class="status" id="status-pill"><span class="dot"></span><span id="status-text">conectando…</span></div>
+  <div class="meta muted" id="meta"></div>
+  <div class="actions">
+    <a class="btn-link" href="/office">Escritório virtual</a>
+    <a class="btn-link" href="/radar">Radar de ondas</a>
+    <button id="btn-cycle" class="primary">Rodar ciclo agora</button>
+    <button id="btn-pause">Pausar</button>
+  </div>
+</header>
+
+<div id="login" class="login hidden">
+  <form id="login-form" class="card">
+    <h2>Acesso do fundador</h2>
+    <p class="muted">Informe o <code>FOUNDER_TOKEN</code> configurado no ambiente.</p>
+    <input id="token" type="password" autocomplete="current-password" placeholder="FOUNDER_TOKEN" required>
+    <button class="primary" type="submit">Entrar</button>
+    <p id="login-error" class="error"></p>
+  </form>
+</div>
+
+<main id="app" class="hidden">
+  <section>
+    <h2>Financeiro <span class="muted small" id="fin-note"></span></h2>
+    <div class="tiles" id="fin-tiles"></div>
+    <div class="grid2">
+      <div class="card"><h3>Custo diário (14 dias, USD)</h3><div id="chart-daily" class="chart"></div></div>
+      <div class="card"><h3>Custo de LLM por agente</h3><table class="tbl" id="tbl-agent-cost"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Progresso do negócio</h2>
+    <div class="tiles" id="biz-tiles"></div>
+  </section>
+
+  <section>
+    <h2>Status do escritório</h2>
+    <div class="card objective" id="objective"></div>
+    <div class="agents" id="agents"></div>
+  </section>
+
+  <section id="sales">
+    <h2>Comercial automático <span class="muted small" id="sales-meta"></span></h2>
+    <p class="muted small">Diana acha empresas → Mercator diagnostica → Mercúrio envia, acompanha e responde → o cliente paga pela proposta → Héstia entrega o kit e os relatórios mensais. Você só acompanha.</p>
+    <div class="row wrap">
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="sales-enabled"> Comercial ligado</label>
+      <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="sales-auto"> Enviar e-mails sozinho</label>
+      <label>Limite de e-mails/dia <input type="number" id="sales-cap" min="0" max="200" style="width:80px"></label>
+      <button id="sales-run" style="flex:none">Rodar uma volta agora</button>
+    </div>
+    <div id="sales-health" class="small" style="margin:10px 0"></div>
+    <div class="kpis" id="sales-kpis"></div>
+    <div class="grid2">
+      <div class="card"><h3>Empresas no funil</h3><div class="scroll"><table class="tbl" id="tbl-prospects"></table></div></div>
+      <div class="card"><h3>Clientes</h3><div class="scroll"><table class="tbl" id="tbl-clients"></table></div><h3>Últimos e-mails</h3><div class="scroll"><table class="tbl" id="tbl-emails"></table></div></div>
+    </div>
+  </section>
+
+  <section id="diagnoses">
+    <h2>Rastreador de IA <span class="muted small">quanto cada IA (ChatGPT, Claude, Perplexity) recomenda uma marca e os concorrentes · relatório e PDF</span></h2>
+    <form id="form-diag" class="grid-form">
+      <input id="dg-brand" placeholder="Marca (ex.: Loja Exemplo)" required maxlength="200">
+      <input id="dg-site" placeholder="Site (ex.: lojaexemplo.com.br)" maxlength="500">
+      <input id="dg-cat" placeholder="Segmento (ex.: loja de suplementos online)" required maxlength="300">
+      <input id="dg-city" placeholder="Cidade/região (opcional)" maxlength="120">
+      <textarea id="dg-comp" rows="3" placeholder="Concorrentes, um por linha: Nome - site.com (até 5)"></textarea>
+      <input id="dg-contact" placeholder="Para quem é (nome/e-mail do contato, opcional)" maxlength="300">
+      <label>Perguntas de compra <select id="dg-n"><option>10</option><option selected>20</option><option>30</option><option>50</option></select></label>
+      <div id="dg-engines" class="row wrap small"></div>
+      <button type="submit" class="primary" style="flex:none">Gerar diagnóstico</button>
+    </form>
+    <div class="scroll"><table class="tbl" id="tbl-diag"></table></div>
+  </section>
+
+  <section id="niches">
+    <h2>Nichos <span class="muted small" id="niche-meta"></span></h2>
+    <p class="muted small">Um nicho é bom quando junta: <strong>volume</strong> (muita gente procurando) · <strong>alguém paga por cliente</strong> (lead ou cadastro aprovado) · <strong>dado oficial para conferir</strong> (onde as IAs erram e nós ganhamos) · <strong>risco legal controlável</strong>. Avaliação inicial; o Conselho revisa com dados reais.</p>
+    <div class="scroll"><table class="tbl" id="tbl-niches"></table></div>
+  </section>
+
+  <section id="council">
+    <h2>Conselho <span class="muted small">os bots debatem o negócio e fecham uma ata (toda semana, ou quando você convocar)</span></h2>
+    <form id="form-council" class="row wrap">
+      <input id="council-topic" maxlength="500" placeholder="Tema da reunião (ex.: como faturar nos próximos 30 dias?)" style="flex:1;min-width:260px">
+      <button type="submit" class="primary" style="flex:none">Convocar reunião</button>
+    </form>
+    <div id="council-list"></div>
+  </section>
+
+  <section id="viability">
+    <h2>Viabilidade <span class="muted small" id="via-targets"></span></h2>
+    <p class="muted small">Veredito semanal do Gauss por comparativo. É só recomendação: encerrar ou trocar de nicho é decisão sua.</p>
+    <div class="row"><button id="via-run">Refazer veredito agora</button></div>
+    <div id="via-hubs" class="via-grid"></div>
+  </section>
+
+  <section id="ai-data">
+    <h2>Dados para IAs <span class="muted small">grafo de conhecimento, arquivos em lote e robôs que leram o portal (30 dias)</span></h2>
+    <div class="grid2">
+      <div class="card"><h3>Grafo e arquivos</h3><div id="ai-graph" class="muted small">Carregando…</div></div>
+      <div class="card"><h3>Avisos enviados (IndexNow Semântico)</h3><p class="muted small" id="ping-lag"></p><div class="scroll"><table class="tbl" id="tbl-pings"></table></div></div>
+      <div class="card"><h3>Robôs de IA</h3><p class="muted small">“Dados” = baixou JSON/JSONL/CSV; “Grafo” = baixou JSON-LD. Conta só robôs conhecidos (GPTBot, ClaudeBot, PerplexityBot…).</p><div class="scroll"><table class="tbl" id="tbl-bots"></table></div></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="card"><h3>Fila de execução</h3><div class="scroll"><table class="tbl" id="tbl-tasks"></table></div></div>
+    <div class="card"><h3>Comunicação inter-agentes <span class="live">ao vivo</span></h3><ol class="log" id="log"></ol></div>
+  </section>
+
+  <section class="grid2">
+    <div class="card"><h3>Aprovações pendentes</h3><div id="approvals"></div></div>
+    <div class="card"><h3>Alertas</h3><ul class="alerts" id="alerts"></ul></div>
+  </section>
+
+  <section>
+    <h2>Controle manual (override)</h2>
+    <div class="grid3">
+      <form class="card" id="form-focus">
+        <h3>Foco estratégico</h3>
+        <label>Nicho prioritário
+          <select id="focus-select">
+            <option>Corporate Finance &amp; ERPs (B2B SaaS)</option>
+            <option>Softwares Médicos &amp; Healthtechs (Prontuários/CRM)</option>
+            <option>Infraestrutura de TI &amp; Cloud (Cibersegurança/DevOps)</option>
+            <option>Agrotechs (Gestão de Safra e Financiamento)</option>
+            <option>Logística Corporativa &amp; Supply Chain (TMS/WMS)</option>
+          </select></label>
+        <label>Ou descreva outro nicho <input id="focus-custom" placeholder="ex.: ERPs para clínicas odontológicas"></label>
+        <button class="primary" type="submit">Aplicar foco</button>
+      </form>
+      <form class="card" id="form-gov">
+        <h3>Governança e orçamento</h3>
+        <label>Autonomia
+          <select id="gov-autonomy">
+            <option value="0">0 · tudo exige aprovação</option>
+            <option value="1">1 · publica sozinho, gasto extra exige aprovação</option>
+            <option value="2">2 · autonomia total</option>
+          </select></label>
+        <label>Orçamento diário de LLM (USD) <input id="gov-daily" type="number" min="0" step="0.5"></label>
+        <label>Orçamento mensal (USD) <input id="gov-monthly" type="number" min="0" step="10"></label>
+        <label>Nota mínima do Score Agent <input id="gov-threshold" type="number" min="0" max="1" step="0.05"></label>
+        <button class="primary" type="submit">Salvar</button>
+      </form>
+      <div class="card">
+        <h3>Diretrizes ao CVO</h3>
+        <form id="form-directive" class="row">
+          <input id="directive-text" placeholder="ex.: priorize fornecedores com API pública" required>
+          <button class="primary" type="submit">Adicionar</button>
+        </form>
+        <ul class="directives" id="directives"></ul>
+        <h3>Registrar receita real</h3>
+        <form id="form-revenue" class="row wrap">
+          <select id="rev-stream"><option value="cpl">CPL</option><option value="affiliate">Afiliado</option><option value="premium_profile">Perfil premium</option><option value="api">API</option><option value="report">Relatório</option><option value="sponsorship">Patrocínio</option></select>
+          <input id="rev-amount" type="number" min="0.01" step="0.01" placeholder="USD" required>
+          <input id="rev-desc" placeholder="descrição">
+          <select id="rev-hub" title="Comparativo que gerou a receita (entra no veredito de viabilidade)"><option value="">site inteiro</option></select>
+          <button type="submit">Registrar</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section id="portal">
+    <h2>Portal público <span class="muted small">revisão humana, correções, leads e API paga</span></h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Revisão humana das fichas</h3>
+        <p class="muted small">Fichas aprovadas pela máquina que ainda não têm o selo “Validado por especialista”. Confira as fontes antes de validar.</p>
+        <label>Seu nome como revisor <input id="reviewer" maxlength="120" placeholder="ex.: Lucas — fundador"></label>
+        <div class="scroll"><table class="tbl" id="tbl-review"></table></div>
+      </div>
+      <div class="card"><h3>Pedidos de correção</h3><ul class="alerts" id="corrections"></ul></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Leads (pedidos de demonstração)</h3><p class="muted small">Marque “ganho” com o valor pago pelo fornecedor: entra como receita real.</p><div class="scroll"><table class="tbl" id="tbl-leads"></table></div></div>
+      <div class="card">
+        <h3>Clientes da API paga</h3>
+        <form id="form-api" class="row wrap">
+          <input id="api-name" placeholder="Cliente" required maxlength="200">
+          <input id="api-email" type="email" placeholder="e-mail (opcional)" maxlength="200">
+          <label>Cota por dia <input id="api-quota" type="number" min="1" value="1000"></label>
+          <label>Preço mensal (US$) <input id="api-price" type="number" min="0" step="1" value="0"></label>
+          <button type="submit" class="primary">Criar chave</button>
+        </form>
+        <div id="api-key-box" class="hidden"></div>
+        <table class="tbl" id="tbl-api"></table>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="card"><h3>Relatórios de auditoria do CVO</h3><div id="reports"></div></div>
+    <div class="card"><h3>Hubs</h3><table class="tbl" id="tbl-hubs"></table><h3>Oportunidades de monetização</h3><table class="tbl" id="tbl-opps"></table></div>
+  </section>
+</main>
+<div id="toast" class="toast hidden"></div>
+<script src="/static/dashboard.js"></script>
+</body>
+</html>
